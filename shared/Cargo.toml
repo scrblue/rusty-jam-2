@@ -1,0 +1,12 @@
+[package]
+name = "rgj_shared"
+version = "0.1.0"
+authors = ["Daniel Lyne <DLyne@pm.me>"]
+edition = "2021"
+publish = false
+
+[dependencies]
+bevy ="0.7"
+log = { version = "0.4" }
+naia-shared = { git = "https://github.com/naia-lib/naia.git"}
+thiserror = "1.0.31"

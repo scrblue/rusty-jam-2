@@ -1,0 +1,14 @@
+[package]
+name = "rgj_server"
+version = "0.1.0"
+authors = ["Daniel Lyne <DLyne@pm.me>"]
+edition = "2021"
+publish = false
+
+[dependencies]
+bevy = "0.7.0"
+clap = { version= "3.1", features = ["derive"] }
+iyes_loopless = "0.5"
+naia-bevy-server = { git = "https://github.com/naia-lib/naia.git", features = ["use-udp"] }
+
+rgj_shared = { path = "../shared" }

@@ -1,0 +1,10 @@
+[workspace]
+members = [
+	"client",
+	"server",
+	"shared",
+]
+resolver = "2"
+
+[profile.dev]
+opt-level = 3
