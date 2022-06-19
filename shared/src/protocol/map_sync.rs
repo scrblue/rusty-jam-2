@@ -4,10 +4,10 @@ use bevy::prelude::{Color, Component};
 use naia_shared::{derive_serde, serde, Property, Replicate};
 use thiserror::Error;
 
-use crate::components::MapConfig;
+use crate::resources::MapConfig;
 
 /// Represents the two layers, ground and air levels
-const MAP_HEIGHT: i32 = 2;
+pub const MAP_HEIGHT: u16 = 2;
 
 #[derive(Copy)]
 #[derive_serde]
@@ -103,8 +103,8 @@ pub fn tile_xyz_to_index(map_conf: &MapConfig, x: i32, y: i32, z: i32) -> usize 
         + x as usize
 }
 
-pub fn index_to_tile_xyz(map_conf: &MapConfig, index: usize) -> (i32, i32, i32) {
-    let mut index = index as i32;
+pub fn index_to_tile_xyz(map_conf: &MapConfig, index: usize) -> (u16, u16, u16) {
+    let mut index = index as u16;
 
     let z = index / (map_conf.size_width * map_conf.size_height);
 

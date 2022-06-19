@@ -1,15 +1,17 @@
 use std::net::SocketAddr;
 
-use bevy::{log::LogPlugin, prelude::*};
+use bevy::{log::LogPlugin, prelude::*, utils::tracing::instrument::WithSubscriber};
 use clap::Parser;
 use iyes_loopless::prelude::*;
 use naia_bevy_server::{Plugin as ServerPlugin, ServerConfig, Stage};
 
 use rgj_shared::{
-    protocol::{MapSync, Protocol},
+    protocol::{map_sync::TileType, Protocol},
+    resources::MapConfig,
     shared_config, Channels,
 };
 
+mod components;
 mod resources;
 
 mod waiting_for_connections;
@@ -77,10 +79,22 @@ pub fn main() {
         )
         // Countdown state
         .add_enter_system(GameState::Countdown, countdown_init)
+        .add_system_set_to_stage(
+            Stage::ReceiveEvents,
+            ConditionSet::new()
+                .run_in_state(GameState::Countdown)
+                .with_system(countdown_events::authorization_event)
+                .with_system(countdown_events::disconnection_event)
+                .with_system(countdown_events::receive_message_event)
+                .into(),
+        )
+        .add_system_set_to_stage(
+            Stage::Tick,
+            ConditionSet::new()
+                .run_in_state(GameState::Countdown)
+                .with_system(countdown_tick)
+                .into(),
+        )
         // Playing state
         .run()
-}
-
-fn generate_map() -> MapSync {
-	MapSync::new_ocean()
 }

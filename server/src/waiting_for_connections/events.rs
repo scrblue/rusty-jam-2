@@ -5,12 +5,12 @@ use naia_bevy_server::{
 };
 
 use rgj_shared::{
-    protocol::{Protocol, WaitingOnPlayers, ClientKeepAlive},
+    protocol::{ClientKeepAlive, Protocol, WaitingOnPlayers},
     Channels,
 };
 
 use crate::{
-    resources::{KeyEntityAssociation, MainRoomKey, UsernameKeyAssociation},
+    resources::{MainRoom, UsernameKeyAssociation},
     Args,
 };
 
@@ -49,13 +49,13 @@ pub fn connection_event<'world, 'state>(
     mut event_reader: EventReader<ConnectionEvent>,
     mut server: Server<'world, 'state, Protocol, Channels>,
 
-    main_room_key: Res<MainRoomKey>,
+    main_room: Res<MainRoom>,
     association: Res<UsernameKeyAssociation>,
 ) {
     for ConnectionEvent(user_key) in event_reader.iter() {
         let address = server
             .user_mut(user_key)
-            .enter_room(&main_room_key.0)
+            .enter_room(&main_room.key)
             .address();
 
         let username = association.get_from_key(user_key).unwrap();
@@ -63,7 +63,7 @@ pub fn connection_event<'world, 'state>(
 
         let _entity = server
             .spawn()
-            .enter_room(&main_room_key.0)
+            .enter_room(&main_room.key)
             .insert(ClientKeepAlive)
             .id();
 

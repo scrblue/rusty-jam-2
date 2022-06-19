@@ -1,5 +1,5 @@
 pub mod behavior;
-pub mod components;
+pub mod resources;
 pub mod protocol;
 
 mod channels;

@@ -5,23 +5,60 @@ use iyes_loopless::prelude::*;
 use naia_bevy_server::{Server, ServerAddrs};
 
 use rgj_shared::{
-    protocol::{Protocol, WaitingOnPlayers},
+    protocol::{
+        map_sync::{MapSync, TileType, MAP_HEIGHT},
+        Protocol, WaitingOnPlayers,
+    },
+    resources::MapConfig,
     Channels,
 };
 
 use crate::{
-    resources::{MainRoomKey, UsernameKeyAssociation},
+    components::{AuthoritativeTileMap, TileMap},
+    resources::{MainRoom, UsernameKeyAssociation},
     Args, GameState,
 };
 
 pub mod events;
 
-#[derive(Component)]
-pub struct JunkComponent;
-
 /// Initialization system
 pub fn init(mut commands: Commands, mut server: Server<Protocol, Channels>, args: Res<Args>) {
     info!("Server running -- awaiting connections");
+
+    // Build AuthoritativeTileMap
+    let mut auth_map_entities =
+        Vec::with_capacity(args.map_size_x as usize * args.map_size_y as usize * 2);
+
+    // TODO: Procedurally generate
+    for z in 0..MAP_HEIGHT {
+        for y in 0..args.map_size_y {
+            for x in 0..args.map_size_x {
+                if z == 1 {
+                    auth_map_entities.push(
+                        commands
+                            .spawn()
+                            .insert(MapSync::new_complete(x, y, z, TileType::ClearSky))
+                            .id(),
+                    );
+                } else {
+                    auth_map_entities.push(
+                        commands
+                            .spawn()
+                            .insert(MapSync::new_complete(x, y, z, TileType::Ocean))
+                            .id(),
+                    );
+                }
+            }
+        }
+    }
+
+    let auth_map = commands
+        .spawn()
+        .insert(AuthoritativeTileMap)
+        .insert(TileMap {
+            children: auth_map_entities,
+        })
+        .id();
 
     let server_addresses = ServerAddrs::new(
         args.bind_udp,
@@ -31,7 +68,10 @@ pub fn init(mut commands: Commands, mut server: Server<Protocol, Channels>, args
     server.listen(&server_addresses);
 
     let main_room_key = server.make_room().key();
-    commands.insert_resource(MainRoomKey(main_room_key));
+    commands.insert_resource(MainRoom {
+        key: main_room_key,
+        map_entity: auth_map,
+    });
 
     commands.insert_resource(UsernameKeyAssociation::new());
 }
@@ -45,9 +85,9 @@ pub fn tick(mut commands: Commands, mut server: Server<Protocol, Channels>, args
         commands.insert_resource(NextState(GameState::Countdown));
     }
 
-	for (_, user_key, entity) in server.scope_checks() {
-		server.user_scope(&user_key).include(&entity);
-	}
+    for (_, user_key, entity) in server.scope_checks() {
+        server.user_scope(&user_key).include(&entity);
+    }
 
     // Update players on how many new connections they're waiting on
     // XXX: Be VERY certain the user count never exceeds the num_players so that it may never exceed u8::MAX.
