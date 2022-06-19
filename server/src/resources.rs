@@ -3,7 +3,7 @@
 
 use std::collections::HashMap;
 
-use bevy::prelude::Entity;
+use bevy::prelude::*;
 use naia_bevy_server::{RoomKey, UserKey};
 
 /// The [`RoomKey`] of the overworld map that every player is apart of.
@@ -108,3 +108,5 @@ impl KeyMapAssociation {
         }
     }
 }
+
+pub struct MapAsset(pub HandleUntyped);

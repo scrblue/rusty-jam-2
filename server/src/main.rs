@@ -1,15 +1,11 @@
-use std::net::SocketAddr;
+use std::{net::SocketAddr, path::PathBuf};
 
 use bevy::{log::LogPlugin, prelude::*, utils::tracing::instrument::WithSubscriber};
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use iyes_loopless::prelude::*;
 use naia_bevy_server::{Plugin as ServerPlugin, ServerConfig, Stage};
 
-use rgj_shared::{
-    protocol::{map_sync::TileType, Protocol},
-    resources::MapConfig,
-    shared_config, Channels,
-};
+use rgj_shared::{protocol::Protocol, shared_config, Channels};
 
 mod components;
 mod resources;
@@ -33,8 +29,14 @@ pub struct Args {
     num_players: u8,
     room_password: String,
 
-    map_size_x: u16,
-    map_size_y: u16,
+    #[clap(subcommand)]
+    map_option: MapOption,
+}
+
+#[derive(Subcommand)]
+pub enum MapOption {
+    Generate { size_x: u16, size_y: u16 },
+    Load { file_path: PathBuf },
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]

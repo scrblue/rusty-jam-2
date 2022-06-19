@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use naia_bevy_server::{Server, UserKey};
 
 use rgj_shared::{
-    protocol::{notifications::WhoseTurn, Protocol, GameStartNotification,TurnChangeNotification},
+    protocol::{notifications::WhoseTurn, GameStartNotification, Protocol, TurnChangeNotification},
     Channels,
 };
 

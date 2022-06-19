@@ -36,26 +36,24 @@ pub fn init(
 
     args: Res<Args>,
     main_room: Res<MainRoom>,
+    map_config: Res<MapConfig>,
     mut key_map_assoc: ResMut<KeyMapAssociation>,
 ) {
     info!("In countdown state -- preparing maps for players");
-    let map_config = MapConfig {
-        size_width: args.map_size_x,
-        size_height: args.map_size_y,
-    };
 
     let auth_map = &query_tilemap.get(main_room.map_entity).unwrap().children;
 
     for (index, key) in server.user_keys().into_iter().enumerate() {
         // FIXME: Support more than four players
-        let mut sub_map_entities =
-            Vec::with_capacity(args.map_size_x as usize * args.map_size_y as usize * 2);
+        let mut sub_map_entities = Vec::with_capacity(
+            map_config.size_width as usize * map_config.size_height as usize * 2,
+        );
 
         let (valid_qs, valid_rs, valid_zs) = if index == 0 {
             // Spawn player on left side
             let valid_qs = [0, 1, 2];
 
-            let mid_y = args.map_size_y / 2;
+            let mid_y = map_config.size_height / 2;
             let valid_rs = [mid_y - 1, mid_y, mid_y + 1];
 
             let valid_zs = [0, 1];
@@ -63,10 +61,10 @@ pub fn init(
             (valid_qs, valid_rs, valid_zs)
         } else if index == 1 {
             // Spawn player on right side
-            let max_x = args.map_size_x - 1;
+            let max_x = map_config.size_width - 1;
             let valid_qs = [max_x - 2, max_x - 1, max_x];
 
-            let mid_y = args.map_size_y / 2;
+            let mid_y = map_config.size_height / 2;
             let valid_rs = [mid_y - 1, mid_y, mid_y + 1];
 
             let valid_zs = [0, 1];
@@ -74,10 +72,10 @@ pub fn init(
             (valid_qs, valid_rs, valid_zs)
         } else if index == 2 {
             // Spawn player on top
-            let mid_x = args.map_size_x / 2;
+            let mid_x = map_config.size_width / 2;
             let valid_qs = [mid_x - 1, mid_x, mid_x + 1];
 
-            let max_y = args.map_size_y - 1;
+            let max_y = map_config.size_height - 1;
             let valid_rs = [max_y - 2, max_y - 1, max_y];
 
             let valid_zs = [0, 1];
@@ -85,7 +83,7 @@ pub fn init(
             (valid_qs, valid_rs, valid_zs)
         } else {
             // Spawn player on bottom
-            let mid_x = args.map_size_x / 2;
+            let mid_x = map_config.size_width / 2;
             let valid_qs = [mid_x - 1, mid_x, mid_x + 1];
 
             let valid_rs = [0, 1, 2];
@@ -96,8 +94,8 @@ pub fn init(
         };
 
         for z in 0..MAP_HEIGHT {
-            for r in 0..args.map_size_y {
-                for q in 0..args.map_size_x {
+            for r in 0..map_config.size_height {
+                for q in 0..map_config.size_width {
                     // If in valid_xs, valid_ys, and valid_zs, insert auth state into perceived
                     // state, otherwise insert a fog tile
 
@@ -142,8 +140,6 @@ pub fn init(
 
         key_map_assoc.insert(key, subj_map);
     }
-
-	commands.insert_resource(map_config);
 
     info!("Done preparing perspectives");
 }
