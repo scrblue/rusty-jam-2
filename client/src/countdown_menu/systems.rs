@@ -8,16 +8,13 @@ use naia_bevy_client::{
 };
 
 use rgj_shared::{
-    behavior::{
-        AxialCoordinates, HEXAGON_HEIGHT, HEXAGON_SIZE, HEXAGON_WIDTH, HEXAGON_X_SPACING,
-        HEXAGON_Y_SPACING,
-    },
+    behavior::HEXAGON_SIZE,
     protocol::{ClientKeepAlive, MapSync, Protocol, ProtocolKind},
     Channels,
 };
 
 use super::resources::SecondsLeft;
-use crate::GameState;
+use crate::{game::resources::TurnTracker, GameState};
 
 pub fn init(mut commands: Commands) {
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
@@ -78,6 +75,20 @@ pub fn receive_countdown_message(
     for event in event_reader.iter() {
         if let MessageEvent(Channels::Countdown, Protocol::Countdown(cd)) = event {
             seconds_left.0 = *cd.secs_left;
+        }
+    }
+}
+
+pub fn receive_game_start_notification(
+    mut event_reader: EventReader<MessageEvent<Protocol, Channels>>,
+    mut commands: Commands,
+) {
+    for event in event_reader.iter() {
+        if let MessageEvent(Channels::GameNotification, Protocol::GameStartNotification(gsn)) =
+            event
+        {
+            commands.insert_resource(TurnTracker::new(&gsn.whose_turn));
+            commands.insert_resource(NextState(GameState::Game));
         }
     }
 }

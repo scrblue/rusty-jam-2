@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{ecs::query, prelude::*};
 use naia_bevy_server::Server;
 
 use rgj_shared::{
@@ -9,7 +9,10 @@ use rgj_shared::{
     Channels,
 };
 
-use crate::resources::UsernameKeyAssociation;
+use crate::{
+    components::TileMap,
+    resources::{KeyMapAssociation, UsernameKeyAssociation},
+};
 
 pub mod resources;
 use resources::TurnTracker;
@@ -47,4 +50,27 @@ pub fn init(
             );
         }
     }
+}
+
+pub fn tick(
+    mut server: Server<Protocol, Channels>,
+    key_map_assoc: Res<KeyMapAssociation>,
+    query_tilemap: Query<&TileMap>,
+) {
+    for (_, user_key, entity) in server.scope_checks() {
+        // Only send updates from tiles in a user's perceived map
+        // TODO: Information management of units
+        let tilemap = &query_tilemap
+            .get(*key_map_assoc.get_from_key(&user_key).unwrap())
+            .unwrap()
+            .children;
+
+        if tilemap.contains(&entity) {
+            server.user_scope(&user_key).include(&entity);
+        } else {
+            server.user_scope(&user_key).exclude(&entity);
+        }
+    }
+
+	server.send_all_updates();
 }
