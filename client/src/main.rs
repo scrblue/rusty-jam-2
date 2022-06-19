@@ -1,7 +1,7 @@
 // disable console on windows for release builds
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::tracing::instrument::WithSubscriber};
 use bevy_egui::EguiPlugin;
 use bevy_prototype_lyon::prelude::ShapePlugin;
 use iyes_loopless::prelude::*;
@@ -116,6 +116,7 @@ fn main() {
             Stage::ReceiveEvents,
             ConditionSet::new()
                 .run_in_state(GameState::Game)
+                .with_system(game_systems::update_component_event)
                 .with_system(game_systems::receive_turn_change_notification)
                 .into(),
         )
@@ -124,6 +125,7 @@ fn main() {
             ConditionSet::new()
                 .run_in_state(GameState::Game)
                 .with_system(game_systems::game_menu)
+                .with_system(game_systems::select_tile_monitor)
                 .into(),
         )
         .run();

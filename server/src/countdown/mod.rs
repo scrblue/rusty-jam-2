@@ -143,6 +143,8 @@ pub fn init(
         key_map_assoc.insert(key, subj_map);
     }
 
+	commands.insert_resource(map_config);
+
     info!("Done preparing perspectives");
 }
 

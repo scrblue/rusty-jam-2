@@ -23,7 +23,7 @@ mod countdown;
 use countdown::{events as countdown_events, init as countdown_init, tick as countdown_tick};
 
 mod playing;
-use playing::{init as playing_init, tick as playing_tick};
+use playing::{events as playing_events, init as playing_init, tick as playing_tick};
 
 #[derive(Parser)]
 pub struct Args {
@@ -101,11 +101,18 @@ pub fn main() {
         // Playing state
         .add_enter_system(GameState::Playing, playing_init)
         .add_system_set_to_stage(
-			Stage::Tick,
-			ConditionSet::new()
-				.run_in_state(GameState::Playing)
-				.with_system(playing_tick)
-				.into()
+            Stage::ReceiveEvents,
+            ConditionSet::new()
+                .run_in_state(GameState::Playing)
+                .with_system(playing_events::receive_input_event)
+                .into(),
+        )
+        .add_system_set_to_stage(
+            Stage::Tick,
+            ConditionSet::new()
+                .run_in_state(GameState::Playing)
+                .with_system(playing_tick)
+                .into(),
         )
         .run()
 }

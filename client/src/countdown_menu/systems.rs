@@ -55,14 +55,16 @@ pub fn insert_component_event(
                 );
                 transform.rotate(Quat::from_rotation_z(std::f32::consts::FRAC_PI_2));
 
-                commands.spawn_bundle(GeometryBuilder::build_as(
-                    &shape,
-                    DrawMode::Outlined {
-                        fill_mode: FillMode::color(color),
-                        outline_mode: StrokeMode::new(Color::BLACK, 5.0),
-                    },
-                    transform,
-                ));
+                commands
+                    .entity(*entity)
+                    .insert_bundle(GeometryBuilder::build_as(
+                        &shape,
+                        DrawMode::Outlined {
+                            fill_mode: FillMode::color(color),
+                            outline_mode: StrokeMode::new(Color::BLACK, 5.0),
+                        },
+                        transform,
+                    ));
             }
         }
     }

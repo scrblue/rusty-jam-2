@@ -14,6 +14,8 @@ use crate::{
     resources::{KeyMapAssociation, UsernameKeyAssociation},
 };
 
+pub mod events;
+
 pub mod resources;
 use resources::TurnTracker;
 

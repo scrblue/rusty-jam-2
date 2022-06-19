@@ -16,6 +16,6 @@ pub enum PlayerInputVariant {
 
 #[derive_serde]
 pub struct ClaimTile {
-    qr: AxialCoordinates,
-    layer: u16,
+    pub qr: AxialCoordinates,
+    pub layer: u16,
 }
