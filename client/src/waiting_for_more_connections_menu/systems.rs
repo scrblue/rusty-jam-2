@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContext};
 use iyes_loopless::state::NextState;
@@ -8,6 +10,7 @@ use naia_bevy_client::{
 
 use crate::{
     waiting_for_more_connections_menu::resources::WaitingFor, ConnectionInformation, GameState,
+    game::resources::Map,
 };
 use rgj_shared::{
     protocol::{ClientKeepAlive, Identification, Protocol, ProtocolKind},
@@ -27,6 +30,9 @@ pub fn init(
     client.connect(&format!("http://{}", conn_info.socket_addr.unwrap()));
 
     commands.insert_resource(WaitingFor(0));
+    commands.insert_resource(Map {
+        coords_to_entity: HashMap::new(),
+    });
 }
 
 pub fn connection_event(client: Client<Protocol, Channels>) {

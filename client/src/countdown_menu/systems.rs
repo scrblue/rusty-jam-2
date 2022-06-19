@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContext};
 use bevy_prototype_lyon::prelude::*;
@@ -14,7 +16,10 @@ use rgj_shared::{
 };
 
 use super::resources::SecondsLeft;
-use crate::{game::resources::TurnTracker, GameState};
+use crate::{
+    game::resources::{Map, TurnTracker},
+    GameState,
+};
 
 pub fn init(mut commands: Commands) {
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
@@ -31,6 +36,8 @@ pub fn insert_component_event(
     mut commands: Commands,
 
     query: Query<&MapSync>,
+
+    mut map: ResMut<Map>,
 ) {
     for event in event_reader.iter() {
         if let InsertComponentEvent(entity, ProtocolKind::MapSync) = event {
@@ -65,6 +72,8 @@ pub fn insert_component_event(
                         },
                         transform,
                     ));
+
+                map.coords_to_entity.insert((q, r, z), *entity);
             }
         }
     }

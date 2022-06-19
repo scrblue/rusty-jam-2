@@ -21,7 +21,7 @@ use rgj_shared::{
     Channels,
 };
 
-use super::resources::TurnTracker;
+use super::resources::{Map, TurnTracker};
 
 pub fn update_component_event(
     mut event_reader: EventReader<UpdateComponentEvent<ProtocolKind>>,
@@ -44,13 +44,65 @@ pub fn update_component_event(
     }
 }
 
-pub fn game_menu(turn_tracker: Res<TurnTracker>, mut egui_context: ResMut<EguiContext>) {
+pub fn game_menu(
+    mut client: Client<Protocol, Channels>,
+
+    mut query_draw: Query<&mut DrawMode>,
+    query_auth: Query<&MapSync>,
+
+    map: Res<Map>,
+
+    mut turn_tracker: ResMut<TurnTracker>,
+    mut egui_context: ResMut<EguiContext>,
+) {
     let label = match &turn_tracker.whose_turn {
         WhoseTurn::Yours => "It is your turn".to_owned(),
         WhoseTurn::Player(string) => format!("It is {}'s turn", string),
     };
 
-    egui::Window::new("Turn Tracker").show(egui_context.ctx_mut(), |ui| ui.label(label));
+    let mut commit_turn = false;
+
+    if turn_tracker.whose_turn == WhoseTurn::Yours {
+        egui::Window::new("Turn Tracker").show(egui_context.ctx_mut(), |ui| {
+            ui.label(label);
+            commit_turn = ui.button("End Turn").clicked();
+        });
+    } else {
+        egui::Window::new("Turn Tracker").show(egui_context.ctx_mut(), |ui| {
+            ui.label(label);
+        });
+    }
+
+    if commit_turn {
+        for cmd in &turn_tracker.recorded_commands {
+            match cmd {
+                PlayerInputVariant::ClaimTile(ct) => {
+                    // Reset the queued actions' indicators so invalid commands don't stay on screen forever
+                    // TODO: Trait or something for applying and removing predicted commands
+                    if let Some(entity) =
+                        map.coords_to_entity
+                            .get(&(ct.qr.column_q, ct.qr.row_r, ct.layer))
+                    {
+                        if let Ok(mut draw_mode) = query_draw.get_mut(*entity) {
+                            if let Ok(auth_state) = query_auth.get(*entity) {
+                                let color: Color = (*auth_state.tile_type).into();
+
+                                *draw_mode = DrawMode::Outlined {
+                                    fill_mode: FillMode::color(color),
+                                    outline_mode: StrokeMode::new(Color::BLACK, 5.0),
+                                };
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        client.send_message(
+            Channels::PlayerInput,
+            &PlayerInput::new_complete(std::mem::take(&mut turn_tracker.recorded_commands)),
+        );
+    }
 }
 
 pub fn receive_turn_change_notification(
@@ -67,13 +119,16 @@ pub fn receive_turn_change_notification(
 }
 
 pub fn select_tile_monitor(
-    mut commands: Commands,
-    mut client: Client<Protocol, Channels>,
-
     camera_transform_query: Query<(&GlobalTransform, &OrthographicProjection)>,
+
+    mut query_draw: Query<&mut DrawMode>,
+    query_auth: Query<&MapSync>,
 
     input_mouse_button: Res<Input<MouseButton>>,
     windows: Res<Windows>,
+
+    mut turn_tracker: ResMut<TurnTracker>,
+    map: Res<Map>,
 ) {
     if input_mouse_button.just_pressed(MouseButton::Left) {
         let window = windows.get_primary().unwrap();
@@ -85,19 +140,9 @@ pub fn select_tile_monitor(
             let camera_y = camera_trans.translation.y;
             let camera_scale = camera_proj.scale;
 
-			// TODO: Get actual width and hegith from window
+            // TODO: Get actual width and hegith from window
             let x = position.x + (camera_x - 400.0) / camera_scale;
             let y = position.y + (camera_y - 300.0) / camera_scale;
-
-            commands.spawn_bundle(SpriteBundle {
-				sprite: Sprite {
-					color: Color::FUCHSIA,
-					custom_size: Some(Vec2::new(10.0, 10.0)),
-					..Default::default()
-				},
-				transform: Transform::from_xyz(x, y, 2.0),
-				..Default::default()
-            });
 
             let q = (f32::sqrt(3.0) / 3.0 * x - 1.0 / 3.0 * y) / HEXAGON_SIZE;
             let r = (2.0 / 3.0 * y) / HEXAGON_SIZE;
@@ -107,13 +152,27 @@ pub fn select_tile_monitor(
                 let r = r.round() as u16;
 
                 let qr = AxialCoordinates::new(q, r);
-                client.send_message(
-                    Channels::PlayerInput,
-                    &PlayerInput::new_complete(vec![PlayerInputVariant::ClaimTile(ClaimTile {
-                        qr,
-                        layer: 0,
-                    })]),
-                );
+
+                // Insert the recorded command into the turn_tracker so they can be sent as a batch
+                // at the end of the turn
+
+                turn_tracker
+                    .recorded_commands
+                    .push(PlayerInputVariant::ClaimTile(ClaimTile { qr, layer: 0 }));
+
+                // TODO: Trait or something for applying and removing predicted commands
+                if let Some(entity) = map.coords_to_entity.get(&(q, r, 0)) {
+                    if let Ok(mut draw_mode) = query_draw.get_mut(*entity) {
+                        if let Ok(auth_state) = query_auth.get(*entity) {
+                            let color: Color = (*auth_state.tile_type).into();
+
+                            *draw_mode = DrawMode::Outlined {
+                                fill_mode: FillMode::color(color),
+                                outline_mode: StrokeMode::new(Color::ORANGE, 5.0),
+                            };
+                        }
+                    }
+                }
             }
         }
     }
