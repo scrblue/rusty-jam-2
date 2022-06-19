@@ -1,11 +1,12 @@
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContext};
+use iyes_loopless::state::NextState;
 use naia_bevy_client::{
     events::{InsertComponentEvent, MessageEvent, SpawnEntityEvent, UpdateComponentEvent},
     Client,
 };
 
-use crate::{waiting_for_more_connections_menu::resources::WaitingFor, ConnectionInformation};
+use crate::{waiting_for_more_connections_menu::resources::WaitingFor, ConnectionInformation, GameState};
 use rgj_shared::{
     protocol::{ClientKeepAlive, Identification, Protocol, ProtocolKind},
     Channels,
@@ -58,6 +59,18 @@ pub fn receive_waiting_on_players_message(
             waiting_for.0 = *waiting.num_waiting_for;
         }
     }
+}
+
+pub fn receive_countdown_message(
+	mut event_reader: EventReader<MessageEvent<Protocol, Channels>>,
+	mut commands: Commands
+) {
+	for event in event_reader.iter() {
+		if let MessageEvent(Channels::Countdown, Protocol::Countdown(cd)) = event {
+			commands.insert_resource(crate::countdown_menu::resources::SecondsLeft(*cd.secs_left));
+			commands.insert_resource(NextState(GameState::CountdownMenu));
+		}
+	}
 }
 
 pub fn waiting_for_more_connections_menu(

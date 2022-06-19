@@ -1,6 +1,7 @@
 use std::net::SocketAddr;
 
 pub mod connect_menu;
+pub mod countdown_menu;
 pub mod waiting_for_more_connections_menu;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]

@@ -1,5 +1,7 @@
 //! A module defining components, resources, and systems specific to the WaitingForConnections GameState.
 
+use std::time::Duration;
+
 use bevy::prelude::*;
 use iyes_loopless::prelude::*;
 use naia_bevy_server::{Server, ServerAddrs};
@@ -15,7 +17,8 @@ use rgj_shared::{
 
 use crate::{
     components::{AuthoritativeTileMap, TileMap},
-    resources::{MainRoom, UsernameKeyAssociation},
+    countdown::resources::{Countdown, TimeSinceLastCount},
+    resources::{KeyMapAssociation, MainRoom, UsernameKeyAssociation},
     Args, GameState,
 };
 
@@ -83,6 +86,11 @@ pub fn tick(mut commands: Commands, mut server: Server<Protocol, Channels>, args
     if server.users_count() == args.num_players as usize {
         info!("Transitioning to countdown phase");
         commands.insert_resource(NextState(GameState::Countdown));
+
+        // Insert resources needed for next state
+        commands.insert_resource(KeyMapAssociation::new());
+        commands.insert_resource(Countdown(10));
+        commands.insert_resource(TimeSinceLastCount(Duration::from_secs(0)));
     }
 
     for (_, user_key, entity) in server.scope_checks() {

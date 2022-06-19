@@ -25,6 +25,6 @@ pub const CHANNEL_CONFIG: &[Channel<Channels>] = &[
     Channel {
         index: Channels::Countdown,
         direction: ChannelDirection::ServerToClient,
-        mode: ChannelMode::TickBuffered(TickBufferSettings::default()),
+        mode: ChannelMode::OrderedReliable(ReliableSettings::default()),
     },
 ];

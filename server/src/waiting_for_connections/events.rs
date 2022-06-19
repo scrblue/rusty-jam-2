@@ -33,7 +33,7 @@ pub fn authorization_event(
                 server.reject_connection(user_key);
             }
 
-            if server.users_count() >= config.num_players as usize {
+            if server.users_count() > config.num_players as usize {
                 info!("Rejecting connection, num_players exceeded");
                 server.reject_connection(user_key);
             }

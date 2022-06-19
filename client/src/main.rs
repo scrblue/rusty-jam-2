@@ -1,8 +1,6 @@
 // disable console on windows for release builds
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::net::SocketAddr;
-
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
 use iyes_loopless::prelude::*;
@@ -10,7 +8,10 @@ use naia_bevy_client::{ClientConfig, Plugin as ClientPlugin, Stage};
 
 use rgj_shared::{protocol::Protocol, shared_config, Channels};
 
-use rgj_client::{connect_menu, waiting_for_more_connections_menu, GameState};
+use rgj_client::{
+    connect_menu, countdown_menu::systems as countdown_systems,
+    waiting_for_more_connections_menu::systems as waiting_systems, GameState,
+};
 
 fn main() {
     App::new()
@@ -40,48 +41,75 @@ fn main() {
         // Waiting
         .add_enter_system(
             GameState::WaitingForMoreConnectionsMenu,
-            waiting_for_more_connections_menu::systems::init,
+            waiting_systems::init,
         )
         .add_system_set_to_stage(
             Stage::Connection,
             ConditionSet::new()
                 .run_in_state(GameState::WaitingForMoreConnectionsMenu)
-                .with_system(waiting_for_more_connections_menu::systems::connection_event)
+                .with_system(waiting_systems::connection_event)
                 .into(),
         )
         .add_system_set_to_stage(
             Stage::Disconnection,
             ConditionSet::new()
                 .run_in_state(GameState::WaitingForMoreConnectionsMenu)
-                .with_system(waiting_for_more_connections_menu::systems::disconnection_event)
+                .with_system(waiting_systems::disconnection_event)
                 .into(),
         )
         .add_system_set_to_stage(
             Stage::ReceiveEvents,
             ConditionSet::new()
                 .run_in_state(GameState::WaitingForMoreConnectionsMenu)
-                .with_system(waiting_for_more_connections_menu::systems::spawn_entity_event)
-                .with_system(waiting_for_more_connections_menu::systems::insert_component_event)
-                .with_system(waiting_for_more_connections_menu::systems::update_component_event)
-                .with_system(
-                    waiting_for_more_connections_menu::systems::receive_waiting_on_players_message,
-                )
+                // On the server it sends spawn_entity_events and insert_component_events from the
+                // Countdown state before sending the first countdown. This is a workaround to make
+                // sure that entities still spawn while this happens
+                .with_system(countdown_systems::spawn_entity_event)
+                .with_system(countdown_systems::insert_component_event)
+                .with_system(waiting_systems::receive_waiting_on_players_message)
+                .with_system(waiting_systems::receive_countdown_message)
                 .into(),
         )
         .add_system_set_to_stage(
             Stage::Frame,
             ConditionSet::new()
                 .run_in_state(GameState::WaitingForMoreConnectionsMenu)
-                .with_system(
-                    waiting_for_more_connections_menu::systems::waiting_for_more_connections_menu,
-                )
+                .with_system(waiting_systems::waiting_for_more_connections_menu)
                 .into(),
         )
         .add_system_set_to_stage(
             Stage::Tick,
             ConditionSet::new()
                 .run_in_state(GameState::WaitingForMoreConnectionsMenu)
-                .with_system(waiting_for_more_connections_menu::systems::tick)
+                .with_system(waiting_systems::tick)
+                .into(),
+        )
+        // Countdown
+        .add_enter_system(
+			GameState::CountdownMenu,
+			countdown_systems::init
+        )
+        .add_system_set_to_stage(
+            Stage::ReceiveEvents,
+            ConditionSet::new()
+                .run_in_state(GameState::CountdownMenu)
+                .with_system(countdown_systems::spawn_entity_event)
+                .with_system(countdown_systems::insert_component_event)
+                .with_system(countdown_systems::receive_countdown_message)
+                .into(),
+        )
+        .add_system_set_to_stage(
+            Stage::Frame,
+            ConditionSet::new()
+                .run_in_state(GameState::CountdownMenu)
+                .with_system(countdown_systems::countdown_menu)
+                .into(),
+        )
+        .add_system_set_to_stage(
+            Stage::Tick,
+            ConditionSet::new()
+                .run_in_state(GameState::CountdownMenu)
+                .with_system(countdown_systems::tick)
                 .into(),
         )
         .run();

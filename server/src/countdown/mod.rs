@@ -63,7 +63,7 @@ pub fn init(
             (valid_xs, valid_ys, valid_zs)
         } else if index == 1 {
             // Spawn player on right side
-            let max_x = args.map_size_x;
+            let max_x = args.map_size_x - 1;
             let valid_xs = [max_x - 2, max_x - 1, max_x];
 
             let mid_y = args.map_size_y / 2;
@@ -77,7 +77,7 @@ pub fn init(
             let mid_x = args.map_size_x / 2;
             let valid_xs = [mid_x - 1, mid_x, mid_x + 1];
 
-            let max_y = args.map_size_y;
+            let max_y = args.map_size_y - 1;
             let valid_ys = [max_y - 2, max_y - 1, max_y];
 
             let valid_zs = [0, 1];
@@ -108,11 +108,18 @@ pub fn init(
                             .unwrap()
                             .clone();
 
-                        sub_map_entities.push(server.spawn().insert(map_sync).id());
+                        sub_map_entities.push(
+                            server
+                                .spawn()
+                                .enter_room(&main_room.key)
+                                .insert(map_sync)
+                                .id(),
+                        );
                     } else {
                         sub_map_entities.push(
                             server
                                 .spawn()
+                                .enter_room(&main_room.key)
                                 .insert(MapSync::new_complete(x, y, z, TileType::Fog))
                                 .id(),
                         );
@@ -163,7 +170,7 @@ pub fn tick(
         }
     }
 
-    time.0 += clock.delta();
+    time.0 += Duration::from_secs_f32(clock.delta_seconds() * 1000.0);
 
     if time.0 > Duration::from_secs(1) {
         time.0 = Duration::from_secs(0);

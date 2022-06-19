@@ -9,7 +9,7 @@ use crate::resources::MapConfig;
 /// Represents the two layers, ground and air levels
 pub const MAP_HEIGHT: u16 = 2;
 
-#[derive(Copy)]
+#[derive(Copy, Debug)]
 #[derive_serde]
 pub enum TileType {
     Fog,
