@@ -126,6 +126,7 @@ fn main() {
                 .run_in_state(GameState::Game)
                 .with_system(game_systems::game_menu)
                 .with_system(game_systems::select_tile_monitor)
+                .with_system(game_systems::camera_system)
                 .into(),
         )
         .run();

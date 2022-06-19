@@ -1,4 +1,9 @@
-use bevy::{input::mouse::MouseMotion, prelude::*};
+use std::env;
+
+use bevy::{
+    input::mouse::{MouseMotion, MouseWheel},
+    prelude::*,
+};
 use bevy_egui::{egui, EguiContext};
 use bevy_prototype_lyon::prelude::*;
 use naia_bevy_client::{
@@ -7,7 +12,7 @@ use naia_bevy_client::{
 };
 
 use rgj_shared::{
-    behavior::{AxialCoordinates, HEXAGON_SIZE, HEXAGON_WIDTH, HEXAGON_HEIGHT},
+    behavior::{AxialCoordinates, HEXAGON_HEIGHT, HEXAGON_SIZE, HEXAGON_WIDTH},
     protocol::{
         notifications::WhoseTurn,
         player_input::{ClaimTile, PlayerInputVariant},
@@ -62,7 +67,11 @@ pub fn receive_turn_change_notification(
 }
 
 pub fn select_tile_monitor(
+    mut commands: Commands,
     mut client: Client<Protocol, Channels>,
+
+    camera_transform_query: Query<(&GlobalTransform, &OrthographicProjection)>,
+
     input_mouse_button: Res<Input<MouseButton>>,
     windows: Res<Windows>,
 ) {
@@ -70,8 +79,25 @@ pub fn select_tile_monitor(
         let window = windows.get_primary().unwrap();
 
         if let Some(position) = window.cursor_position() {
-            let x = position.x - 400.0 + *HEXAGON_WIDTH/2.0;
-            let y = position.y - 300.0 + HEXAGON_HEIGHT/2.0;
+            let (camera_trans, camera_proj) = camera_transform_query.get_single().unwrap();
+
+            let camera_x = camera_trans.translation.x;
+            let camera_y = camera_trans.translation.y;
+            let camera_scale = camera_proj.scale;
+
+			// TODO: Get actual width and hegith from window
+            let x = position.x + (camera_x - 400.0) / camera_scale;
+            let y = position.y + (camera_y - 300.0) / camera_scale;
+
+            commands.spawn_bundle(SpriteBundle {
+				sprite: Sprite {
+					color: Color::FUCHSIA,
+					custom_size: Some(Vec2::new(10.0, 10.0)),
+					..Default::default()
+				},
+				transform: Transform::from_xyz(x, y, 2.0),
+				..Default::default()
+            });
 
             let q = (f32::sqrt(3.0) / 3.0 * x - 1.0 / 3.0 * y) / HEXAGON_SIZE;
             let r = (2.0 / 3.0 * y) / HEXAGON_SIZE;
@@ -91,4 +117,37 @@ pub fn select_tile_monitor(
             }
         }
     }
+}
+
+pub fn camera_system(
+    mut ev_motion: EventReader<MouseMotion>,
+    mut ev_scroll: EventReader<MouseWheel>,
+
+    mut camera_query: Query<(&mut OrthographicProjection, &mut GlobalTransform)>,
+
+    input_mouse_button: Res<Input<MouseButton>>,
+) {
+    let mut pan = Vec2::ZERO;
+    let mut scroll = 0.0;
+
+    if input_mouse_button.pressed(MouseButton::Middle) {
+        for event in ev_motion.iter() {
+            pan += event.delta;
+        }
+    }
+
+    for event in ev_scroll.iter() {
+        scroll += event.y;
+    }
+
+    let (mut camera_proj, mut camera_trans) = camera_query.get_single_mut().unwrap();
+
+    if camera_proj.scale > 0.0 {
+        camera_proj.scale -= scroll * 0.01;
+        if camera_proj.scale < 0.0 {
+            camera_proj.scale = 0.1;
+        }
+    }
+    camera_trans.translation.x -= pan.x * camera_proj.scale;
+    camera_trans.translation.y += pan.y * camera_proj.scale;
 }
