@@ -125,8 +125,8 @@ fn main() {
             ConditionSet::new()
                 .run_in_state(GameState::Game)
                 .with_system(game_systems::game_menu)
-                .with_system(game_systems::select_tile_monitor)
-                .with_system(game_systems::camera_system)
+                .with_system(game_systems::input::select_tile_monitor)
+                .with_system(game_systems::input::camera_system)
                 .into(),
         )
         .run();
