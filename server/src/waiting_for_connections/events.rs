@@ -1,13 +1,16 @@
 use bevy::prelude::*;
 use naia_bevy_server::{
-    events::{AuthorizationEvent, ConnectionEvent, DisconnectionEvent},
+    events::{AuthorizationEvent, ConnectionEvent, DisconnectionEvent, MessageEvent},
     Server,
 };
 
-use rgj_shared::{protocol::Protocol, Channels};
+use rgj_shared::{
+    protocol::{Protocol, WaitingOnPlayers, ClientKeepAlive},
+    Channels,
+};
 
 use crate::{
-    resources::{MainRoomKey, UsernameKeyAssocaiation},
+    resources::{KeyEntityAssociation, MainRoomKey, UsernameKeyAssociation},
     Args,
 };
 
@@ -15,7 +18,7 @@ pub fn authorization_event(
     mut event_reader: EventReader<AuthorizationEvent<Protocol>>,
     mut server: Server<Protocol, Channels>,
 
-    mut association: ResMut<UsernameKeyAssocaiation>,
+    mut association: ResMut<UsernameKeyAssociation>,
     config: Res<Args>,
 ) {
     for event in event_reader.iter() {
@@ -47,7 +50,7 @@ pub fn connection_event<'world, 'state>(
     mut server: Server<'world, 'state, Protocol, Channels>,
 
     main_room_key: Res<MainRoomKey>,
-    association: Res<UsernameKeyAssocaiation>,
+    association: Res<UsernameKeyAssociation>,
 ) {
     for ConnectionEvent(user_key) in event_reader.iter() {
         let address = server
@@ -57,12 +60,24 @@ pub fn connection_event<'world, 'state>(
 
         let username = association.get_from_key(user_key).unwrap();
         info!("Formed connection with {} on {}", username, address);
+
+        let _entity = server
+            .spawn()
+            .enter_room(&main_room_key.0)
+            .insert(ClientKeepAlive)
+            .id();
+
+        server.send_message(
+            user_key,
+            Channels::WaitingOnPlayers,
+            &WaitingOnPlayers::new_complete(0),
+        );
     }
 }
 
 pub fn disconnection_event(
     mut event_reader: EventReader<DisconnectionEvent>,
-    mut association: ResMut<UsernameKeyAssocaiation>,
+    mut association: ResMut<UsernameKeyAssociation>,
 ) {
     for DisconnectionEvent(user_key, user) in event_reader.iter() {
         let username = association.get_from_key(user_key).unwrap();
@@ -71,6 +86,9 @@ pub fn disconnection_event(
     }
 }
 
-pub fn receive_message_event() {
+pub fn receive_message_event(mut event_reader: EventReader<MessageEvent<Protocol, Channels>>) {
     // NOOP in this state
+    for _ in event_reader.iter() {
+        info!("KEEP ALIVE");
+    }
 }

@@ -10,21 +10,7 @@ use naia_bevy_client::{ClientConfig, Plugin as ClientPlugin, Stage};
 
 use rgj_shared::{protocol::Protocol, shared_config, Channels};
 
-use rgj_client::connect_menu;
-
-#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
-pub enum GameState {
-    ConnectMenu,
-    WaitingForMoreConnectionsMenu,
-    CountdownMenu,
-    Game,
-}
-
-pub struct ConnectionInformation {
-    socket_addr: SocketAddr,
-    username: String,
-    room_password: String,
-}
+use rgj_client::{connect_menu, waiting_for_more_connections_menu, GameState};
 
 fn main() {
     App::new()
@@ -42,7 +28,6 @@ fn main() {
             ClientConfig::default(),
             shared_config(),
         ))
-        .add_event::<connect_menu::ConnectEvent>()
         .add_loopless_state(GameState::ConnectMenu)
         // ConnectMenu state
         .add_enter_system(GameState::ConnectMenu, connect_menu::connect_menu_init)
@@ -50,28 +35,47 @@ fn main() {
             ConditionSet::new()
                 .run_in_state(GameState::ConnectMenu)
                 .with_system(connect_menu::connect_menu)
-                .with_system(monitor_for_addr)
                 .into(),
         )
-        //.add_exit_system(GameState::ConnectMenu, destroy_ui)
+        // Waiting
+        .add_enter_system(
+            GameState::WaitingForMoreConnectionsMenu,
+            waiting_for_more_connections_menu::systems::init,
+        )
+        .add_system_set_to_stage(
+            Stage::Connection,
+            ConditionSet::new()
+                .run_in_state(GameState::WaitingForMoreConnectionsMenu)
+                .with_system(waiting_for_more_connections_menu::systems::connection_event)
+                .into(),
+        )
+        .add_system_set_to_stage(
+            Stage::Disconnection,
+            ConditionSet::new()
+                .run_in_state(GameState::WaitingForMoreConnectionsMenu)
+                .with_system(waiting_for_more_connections_menu::systems::disconnection_event)
+                .into(),
+        )
+        .add_system_set_to_stage(
+            Stage::ReceiveEvents,
+            ConditionSet::new()
+                .run_in_state(GameState::WaitingForMoreConnectionsMenu)
+                .with_system(waiting_for_more_connections_menu::systems::spawn_entity_event)
+                .with_system(waiting_for_more_connections_menu::systems::insert_component_event)
+                .with_system(waiting_for_more_connections_menu::systems::update_component_event)
+                .with_system(
+                    waiting_for_more_connections_menu::systems::receive_waiting_on_players_message,
+                )
+                .into(),
+        )
+        .add_system_set_to_stage(
+            Stage::Frame,
+            ConditionSet::new()
+                .run_in_state(GameState::WaitingForMoreConnectionsMenu)
+                .with_system(
+                    waiting_for_more_connections_menu::systems::waiting_for_more_connections_menu,
+                )
+                .into(),
+        )
         .run();
-}
-
-/// Monitors for an event from the [`connect_menu::connect_menu`] so the game knows to begin
-/// connection
-fn monitor_for_addr(mut commands: Commands, mut events: EventReader<connect_menu::ConnectEvent>) {
-    if let Some(connect_menu::ConnectEvent {
-        socket_addr,
-        username,
-        room_password,
-    }) = events.iter().next()
-    {
-        commands.insert_resource(ConnectionInformation {
-            socket_addr: *socket_addr,
-            username: username.clone(),
-            room_password: room_password.clone(),
-        });
-        commands.insert_resource(NextState(GameState::WaitingForMoreConnectionsMenu));
-        info!("HERE!");
-    }
 }

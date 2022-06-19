@@ -10,11 +10,14 @@ use rgj_shared::{
 };
 
 use crate::{
-    resources::{MainRoomKey, UsernameKeyAssocaiation},
+    resources::{MainRoomKey, UsernameKeyAssociation},
     Args, GameState,
 };
 
 pub mod events;
+
+#[derive(Component)]
+pub struct JunkComponent;
 
 /// Initialization system
 pub fn init(mut commands: Commands, mut server: Server<Protocol, Channels>, args: Res<Args>) {
@@ -30,7 +33,7 @@ pub fn init(mut commands: Commands, mut server: Server<Protocol, Channels>, args
     let main_room_key = server.make_room().key();
     commands.insert_resource(MainRoomKey(main_room_key));
 
-    commands.insert_resource(UsernameKeyAssocaiation::new());
+    commands.insert_resource(UsernameKeyAssociation::new());
 }
 
 /// The tick fn will simply wait for the number of players to equal the configured, then enter the
@@ -41,8 +44,8 @@ pub fn tick(mut commands: Commands, mut server: Server<Protocol, Channels>, args
         commands.insert_resource(NextState(GameState::Countdown));
     }
 
-	// Update players on how many new connections they're waiting on
-	// XXX: Be VERY certain the user count never exceeds the num_players so that it may never exceed u8::MAX.
+    // Update players on how many new connections they're waiting on
+    // XXX: Be VERY certain the user count never exceeds the num_players so that it may never exceed u8::MAX.
     let waiting_on = WaitingOnPlayers::new_complete(args.num_players - server.users_count() as u8);
     for key in server.user_keys() {
         server.send_message(&key, Channels::WaitingOnPlayers, &waiting_on);

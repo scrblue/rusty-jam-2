@@ -8,7 +8,7 @@ use crate::{Channels, CHANNEL_CONFIG};
 use naia_shared::LinkConditionerConfig;
 
 pub fn shared_config() -> SharedConfig<Channels> {
-    let tick_interval = Some(Duration::from_millis(50));
+    let tick_interval = Some(Duration::from_millis(20));
 
     #[cfg(debug_assertions)]
     let link_condition = Some(LinkConditionerConfig::average_condition());

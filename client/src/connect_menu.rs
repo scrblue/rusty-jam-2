@@ -2,12 +2,9 @@ use std::{net::SocketAddr, str::FromStr};
 
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContext};
+use iyes_loopless::prelude::*;
 
-pub struct ConnectEvent {
-    pub socket_addr: SocketAddr,
-    pub username: String,
-    pub room_password: String,
-}
+use crate::{ConnectionInformation, GameState};
 
 #[derive(Default)]
 pub struct UiState {
@@ -21,12 +18,14 @@ pub struct UiState {
 
 pub fn connect_menu_init(mut commands: Commands) {
     commands.insert_resource(UiState::default());
+    commands.insert_resource(ConnectionInformation::default());
 }
 
 pub fn connect_menu(
+    mut commands: Commands,
+
     mut egui_context: ResMut<EguiContext>,
     mut ui_state: ResMut<UiState>,
-    mut writer: EventWriter<ConnectEvent>,
 ) {
     let mut clicked = false;
 
@@ -58,11 +57,14 @@ pub fn connect_menu(
         }
 
         match socket_addr {
-            Ok(socket_addr) => writer.send(ConnectEvent {
-                socket_addr,
-                username: ui_state.username.clone(),
-                room_password: ui_state.password.clone(),
-            }),
+            Ok(socket_addr) => {
+                commands.insert_resource(ConnectionInformation {
+                    socket_addr: Some(socket_addr),
+                    username: ui_state.username.clone(),
+                    room_password: ui_state.password.clone(),
+                });
+                commands.insert_resource(NextState(GameState::WaitingForMoreConnectionsMenu));
+            }
             Err(e) => ui_state.error_msg = e.to_string(),
         }
     }
