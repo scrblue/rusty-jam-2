@@ -27,9 +27,4 @@ pub const CHANNEL_CONFIG: &[Channel<Channels>] = &[
         direction: ChannelDirection::ServerToClient,
         mode: ChannelMode::TickBuffered(TickBufferSettings::default()),
     },
-    Channel {
-        index: Channels::MapSync,
-        direction: ChannelDirection::ServerToClient,
-        mode: ChannelMode::UnorderedReliable(ReliableSettings::default()),
-    },
 ];

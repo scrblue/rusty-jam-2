@@ -118,39 +118,10 @@ pub fn index_to_tile_xyz(map_conf: &MapConfig, index: usize) -> (i32, i32, i32) 
 
 #[derive(Component, Replicate)]
 #[protocol_path = "crate::protocol::Protocol"]
-/// The synchronization of the map revealing the types of tiles of what's visible to the player
+/// The synchronization of a tile on the map
 pub struct MapSync {
-    pub map: Property<Vec<TileType>>,
-}
-
-impl MapSync {
-    pub fn new_fog(map_conf: &MapConfig) -> MapSync {
-        MapSync::new_complete(vec![
-            TileType::Fog;
-            map_conf.size_width as usize
-                * map_conf.size_height as usize
-                * MAP_HEIGHT as usize
-        ])
-    }
-
-    pub fn new_empty(map_conf: &MapConfig) -> MapSync {
-        let mut sync = MapSync::new_complete(vec![
-            TileType::Ocean;
-            map_conf.size_width as usize
-                * map_conf.size_height as usize
-                * MAP_HEIGHT as usize
-        ]);
-
-        for x in 0..map_conf.size_width {
-            for y in 0..map_conf.size_width {
-                sync.change_tile(map_conf, x, y, 1, TileType::ClearSky);
-            }
-        }
-
-        sync
-    }
-
-    pub fn change_tile(&mut self, map_conf: &MapConfig, x: i32, y: i32, z: i32, tile: TileType) {
-        self.map[tile_xyz_to_index(map_conf, x, y, z)] = tile;
-    }
+    pub x: Property<u16>,
+    pub y: Property<u16>,
+    pub z: Property<u16>,
+    pub tile_type: Property<TileType>,
 }
