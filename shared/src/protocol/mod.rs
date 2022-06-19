@@ -17,10 +17,10 @@ pub use map_sync::MapSync;
 
 #[derive(Protocolize)]
 pub enum Protocol {
-	Identification(Identification),
-	ClientKeepAlive(ClientKeepAlive),
+    Identification(Identification),
+    ClientKeepAlive(ClientKeepAlive),
 
-	WaitingOnPlayers(WaitingOnPlayers),
-	Countdown(Countdown),
-	MapSync(MapSync),
+    WaitingOnPlayers(WaitingOnPlayers),
+    Countdown(Countdown),
+    MapSync(MapSync),
 }

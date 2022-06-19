@@ -6,4 +6,3 @@ use naia_shared::{Property, Replicate};
 pub struct WaitingOnPlayers {
     pub num_waiting_for: Property<u8>,
 }
-

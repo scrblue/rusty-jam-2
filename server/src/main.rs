@@ -5,16 +5,20 @@ use clap::Parser;
 use iyes_loopless::prelude::*;
 use naia_bevy_server::{Plugin as ServerPlugin, ServerConfig, Stage};
 
-use rgj_shared::{protocol::Protocol, shared_config, Channels};
+use rgj_shared::{
+    protocol::{MapSync, Protocol},
+    shared_config, Channels,
+};
 
 mod resources;
 
 mod waiting_for_connections;
 use waiting_for_connections::{
-	events as waiting_events,
-	init as waiting_init,
-	tick as waiting_tick,
+    events as waiting_events, init as waiting_init, tick as waiting_tick,
 };
+
+mod countdown;
+use countdown::{events as countdown_events, init as countdown_init, tick as countdown_tick};
 
 #[derive(Parser)]
 pub struct Args {
@@ -71,14 +75,12 @@ pub fn main() {
                 .with_system(waiting_tick)
                 .into(),
         )
-        .add_exit_system(
-            GameState::WaitingForConnections,
-            // TODO: Will probably need to cleanup playing state eventually
-            noop,
-        )
         // Countdown state
+        .add_enter_system(GameState::Countdown, countdown_init)
         // Playing state
         .run()
 }
 
-fn noop() {}
+fn generate_map() -> MapSync {
+	MapSync::new_ocean()
+}

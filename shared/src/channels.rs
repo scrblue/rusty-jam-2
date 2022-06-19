@@ -13,11 +13,10 @@ pub enum Channels {
 
 pub const CHANNEL_CONFIG: &[Channel<Channels>] = &[
     Channel {
-		index: Channels::ClientKeepAlive,
-		direction: ChannelDirection::ClientToServer,
-		mode: ChannelMode::TickBuffered(TickBufferSettings::default()),
+        index: Channels::ClientKeepAlive,
+        direction: ChannelDirection::ClientToServer,
+        mode: ChannelMode::TickBuffered(TickBufferSettings::default()),
     },
-
     Channel {
         index: Channels::WaitingOnPlayers,
         direction: ChannelDirection::ServerToClient,

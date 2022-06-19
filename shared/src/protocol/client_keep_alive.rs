@@ -5,10 +5,8 @@ use naia_shared::{Property, Replicate};
 #[protocol_path = "crate::protocol::Protocol"]
 pub struct ClientKeepAlive;
 
-
 impl ClientKeepAlive {
     pub fn new() -> ClientKeepAlive {
         ClientKeepAlive
     }
 }
-

@@ -129,6 +129,7 @@ impl MapSync {
             TileType::Fog;
             map_conf.size_width as usize
                 * map_conf.size_height as usize
+                * MAP_HEIGHT as usize
         ])
     }
 
@@ -137,6 +138,7 @@ impl MapSync {
             TileType::Ocean;
             map_conf.size_width as usize
                 * map_conf.size_height as usize
+                * MAP_HEIGHT as usize
         ])
     }
 
