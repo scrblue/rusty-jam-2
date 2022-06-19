@@ -22,6 +22,9 @@ use waiting_for_connections::{
 mod countdown;
 use countdown::{events as countdown_events, init as countdown_init, tick as countdown_tick};
 
+mod playing;
+use playing::{init as playing_init};
+
 #[derive(Parser)]
 pub struct Args {
     bind_udp: SocketAddr,
@@ -96,5 +99,6 @@ pub fn main() {
                 .into(),
         )
         // Playing state
+        .add_enter_system(GameState::Playing, playing_init)
         .run()
 }
