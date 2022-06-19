@@ -133,13 +133,21 @@ impl MapSync {
         ])
     }
 
-    pub fn new_ocean(map_conf: &MapConfig) -> MapSync {
-        MapSync::new_complete(vec![
+    pub fn new_empty(map_conf: &MapConfig) -> MapSync {
+        let mut sync = MapSync::new_complete(vec![
             TileType::Ocean;
             map_conf.size_width as usize
                 * map_conf.size_height as usize
                 * MAP_HEIGHT as usize
-        ])
+        ]);
+
+        for x in 0..map_conf.size_width {
+            for y in 0..map_conf.size_width {
+                sync.change_tile(map_conf, x, y, 1, TileType::ClearSky);
+            }
+        }
+
+        sync
     }
 
     pub fn change_tile(&mut self, map_conf: &MapConfig, x: i32, y: i32, z: i32, tile: TileType) {
