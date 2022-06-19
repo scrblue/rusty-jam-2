@@ -21,6 +21,7 @@ bevy_egui = {version = "0.14", features = ["immutable_ctx"] }
 bevy_kira_audio = { version = "0.10" }
 bevy_prototype_lyon = "0.5"
 iyes_loopless = "0.5"
+leafwing-input-manager = "0.3"
 naia-bevy-client = { git = "https://github.com/naia-lib/naia.git" }
 rand = "0.8.3"
 

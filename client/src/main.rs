@@ -5,6 +5,9 @@ use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
 use bevy_prototype_lyon::prelude::ShapePlugin;
 use iyes_loopless::prelude::*;
+
+use leafwing_input_manager::prelude::*;
+
 use naia_bevy_client::{ClientConfig, Plugin as ClientPlugin, Stage};
 
 use rgj_shared::{protocol::Protocol, shared_config, Channels};
@@ -13,6 +16,7 @@ use rgj_client::{
     connect_menu,
     countdown_menu::systems as countdown_systems,
     game::{resources::TileSelectedEvent, systems as game_systems},
+    input::Action,
     waiting_for_more_connections_menu::systems as waiting_systems,
     GameState,
 };
@@ -30,6 +34,20 @@ fn main() {
         .add_event::<TileSelectedEvent>()
         .add_plugins(DefaultPlugins)
         .add_plugin(EguiPlugin)
+       // .insert_resource(WorldInspectorParams {
+       //     despawnable_entities: true,
+       //     highlight_changes: true,
+       //     ..Default::default()
+       // })
+       // .add_plugin(WorldInspectorPlugin::new())
+       // .add_plugin(InspectorPlugin::<Resources>::new())
+       // // registers the type in the `bevy_reflect` machinery,
+       // // so that even without implementing `Inspectable` we can display the struct fields
+       // .register_type::<OrthographicProjection>()
+       // // This plugin maps inputs to an input-type agnostic action-state
+       // // We need to provide it with an enum which stores the possible actions a player could take
+       // .add_plugin(InputManagerPlugin::<Action>::default())
+       // XXX The InputMap and ActionState components will be added to any entity with the Player component
         .add_plugin(ClientPlugin::<Protocol, Channels>::new(
             ClientConfig::default(),
             shared_config(),
