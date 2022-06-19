@@ -3,6 +3,7 @@
 
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
+use bevy_prototype_lyon::prelude::ShapePlugin;
 use iyes_loopless::prelude::*;
 use naia_bevy_client::{ClientConfig, Plugin as ClientPlugin, Stage};
 
@@ -29,6 +30,7 @@ fn main() {
             ClientConfig::default(),
             shared_config(),
         ))
+        .add_plugin(ShapePlugin)
         .add_loopless_state(GameState::ConnectMenu)
         // ConnectMenu state
         .add_enter_system(GameState::ConnectMenu, connect_menu::connect_menu_init)
@@ -85,10 +87,7 @@ fn main() {
                 .into(),
         )
         // Countdown
-        .add_enter_system(
-			GameState::CountdownMenu,
-			countdown_systems::init
-        )
+        .add_enter_system(GameState::CountdownMenu, countdown_systems::init)
         .add_system_set_to_stage(
             Stage::ReceiveEvents,
             ConditionSet::new()

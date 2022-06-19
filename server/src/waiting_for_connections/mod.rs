@@ -7,6 +7,7 @@ use iyes_loopless::prelude::*;
 use naia_bevy_server::{Server, ServerAddrs};
 
 use rgj_shared::{
+    behavior::AxialCoordinates,
     protocol::{
         map_sync::{MapSync, TileType, MAP_HEIGHT},
         Protocol, WaitingOnPlayers,
@@ -34,20 +35,28 @@ pub fn init(mut commands: Commands, mut server: Server<Protocol, Channels>, args
 
     // TODO: Procedurally generate
     for z in 0..MAP_HEIGHT {
-        for y in 0..args.map_size_y {
-            for x in 0..args.map_size_x {
+        for r in 0..args.map_size_y {
+            for q in 0..args.map_size_x {
                 if z == 1 {
                     auth_map_entities.push(
                         commands
                             .spawn()
-                            .insert(MapSync::new_complete(x, y, z, TileType::ClearSky))
+                            .insert(MapSync::new_complete(
+                                AxialCoordinates::new(q, r),
+                                z,
+                                TileType::ClearSky,
+                            ))
                             .id(),
                     );
                 } else {
                     auth_map_entities.push(
                         commands
                             .spawn()
-                            .insert(MapSync::new_complete(x, y, z, TileType::Ocean))
+                            .insert(MapSync::new_complete(
+                                AxialCoordinates::new(q, r),
+                                z,
+                                TileType::Ocean,
+                            ))
                             .id(),
                     );
                 }

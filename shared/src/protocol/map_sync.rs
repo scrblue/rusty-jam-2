@@ -4,7 +4,7 @@ use bevy::prelude::{Color, Component};
 use naia_shared::{derive_serde, serde, Property, Replicate};
 use thiserror::Error;
 
-use crate::resources::MapConfig;
+use crate::{behavior::AxialCoordinates, resources::MapConfig};
 
 /// Represents the two layers, ground and air levels
 pub const MAP_HEIGHT: u16 = 2;
@@ -97,31 +97,30 @@ impl From<TileType> for Color {
     }
 }
 
-pub fn tile_xyz_to_index(map_conf: &MapConfig, x: i32, y: i32, z: i32) -> usize {
+pub fn tile_prz_to_index(map_conf: &MapConfig, p: i32, r: i32, z: i32) -> usize {
     (z as usize * map_conf.size_width as usize * map_conf.size_height as usize)
-        + (y as usize * map_conf.size_width as usize)
-        + x as usize
+        + (r as usize * map_conf.size_width as usize)
+        + p as usize
 }
 
-pub fn index_to_tile_xyz(map_conf: &MapConfig, index: usize) -> (u16, u16, u16) {
+pub fn index_to_tile_prz(map_conf: &MapConfig, index: usize) -> (u16, u16, u16) {
     let mut index = index as u16;
 
     let z = index / (map_conf.size_width * map_conf.size_height);
 
     index -= z * map_conf.size_width * map_conf.size_height;
 
-    let y = index / map_conf.size_width;
-    let x = index % map_conf.size_width;
+    let r = index / map_conf.size_width;
+    let p = index % map_conf.size_width;
 
-    (x, y, z)
+    (p, r, z)
 }
 
 #[derive(Component, Replicate)]
 #[protocol_path = "crate::protocol::Protocol"]
 /// The synchronization of a tile on the map
 pub struct MapSync {
-    pub x: Property<u16>,
-    pub y: Property<u16>,
-    pub z: Property<u16>,
+    pub position: Property<AxialCoordinates>,
+    pub layer: Property<u16>,
     pub tile_type: Property<TileType>,
 }

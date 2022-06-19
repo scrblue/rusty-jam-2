@@ -6,8 +6,8 @@ use iyes_loopless::state::NextState;
 use naia_bevy_server::Server;
 
 use rgj_shared::{
+    behavior::AxialCoordinates,
     protocol::{
-        countdown,
         map_sync::{MapSync, TileType, MAP_HEIGHT},
         Countdown as CountdownPacket, Protocol,
     },
@@ -51,60 +51,60 @@ pub fn init(
         let mut sub_map_entities =
             Vec::with_capacity(args.map_size_x as usize * args.map_size_y as usize * 2);
 
-        let (valid_xs, valid_ys, valid_zs) = if index == 0 {
+        let (valid_qs, valid_rs, valid_zs) = if index == 0 {
             // Spawn player on left side
-            let valid_xs = [0, 1, 2];
+            let valid_qs = [0, 1, 2];
 
             let mid_y = args.map_size_y / 2;
-            let valid_ys = [mid_y - 1, mid_y, mid_y + 1];
+            let valid_rs = [mid_y - 1, mid_y, mid_y + 1];
 
             let valid_zs = [0, 1];
 
-            (valid_xs, valid_ys, valid_zs)
+            (valid_qs, valid_rs, valid_zs)
         } else if index == 1 {
             // Spawn player on right side
             let max_x = args.map_size_x - 1;
-            let valid_xs = [max_x - 2, max_x - 1, max_x];
+            let valid_qs = [max_x - 2, max_x - 1, max_x];
 
             let mid_y = args.map_size_y / 2;
-            let valid_ys = [mid_y - 1, mid_y, mid_y + 1];
+            let valid_rs = [mid_y - 1, mid_y, mid_y + 1];
 
             let valid_zs = [0, 1];
 
-            (valid_xs, valid_ys, valid_zs)
+            (valid_qs, valid_rs, valid_zs)
         } else if index == 2 {
             // Spawn player on top
             let mid_x = args.map_size_x / 2;
-            let valid_xs = [mid_x - 1, mid_x, mid_x + 1];
+            let valid_qs = [mid_x - 1, mid_x, mid_x + 1];
 
             let max_y = args.map_size_y - 1;
-            let valid_ys = [max_y - 2, max_y - 1, max_y];
+            let valid_rs = [max_y - 2, max_y - 1, max_y];
 
             let valid_zs = [0, 1];
 
-            (valid_xs, valid_ys, valid_zs)
+            (valid_qs, valid_rs, valid_zs)
         } else {
             // Spawn player on bottom
             let mid_x = args.map_size_x / 2;
-            let valid_xs = [mid_x - 1, mid_x, mid_x + 1];
+            let valid_qs = [mid_x - 1, mid_x, mid_x + 1];
 
-            let valid_ys = [0, 1, 2];
+            let valid_rs = [0, 1, 2];
 
             let valid_zs = [0, 1];
 
-            (valid_xs, valid_ys, valid_zs)
+            (valid_qs, valid_rs, valid_zs)
         };
 
         for z in 0..MAP_HEIGHT {
-            for y in 0..args.map_size_y {
-                for x in 0..args.map_size_x {
+            for r in 0..args.map_size_y {
+                for q in 0..args.map_size_x {
                     // If in valid_xs, valid_ys, and valid_zs, insert auth state into perceived
                     // state, otherwise insert a fog tile
 
-                    if valid_zs.contains(&z) && valid_ys.contains(&y) && valid_xs.contains(&x) {
+                    if valid_zs.contains(&z) && valid_rs.contains(&r) && valid_qs.contains(&q) {
                         // Get the authoritative map sync
                         let map_sync = query_tile
-                            .get(auth_map[TileMap::tile_xyz_to_index(&map_config, x, y, z)])
+                            .get(auth_map[TileMap::tile_qrz_to_index(&map_config, q, r, z)])
                             .unwrap()
                             .clone();
 
@@ -120,7 +120,11 @@ pub fn init(
                             server
                                 .spawn()
                                 .enter_room(&main_room.key)
-                                .insert(MapSync::new_complete(x, y, z, TileType::Fog))
+                                .insert(MapSync::new_complete(
+                                    AxialCoordinates::new(q, r),
+                                    z,
+                                    TileType::Fog,
+                                ))
                                 .id(),
                         );
                     }
