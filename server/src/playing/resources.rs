@@ -1,9 +1,88 @@
-use std::time::Duration;
+use std::{collections::VecDeque, time::Duration};
 
-use naia_bevy_server::UserKey;
+use bevy::prelude::*;
+use naia_bevy_server::{Server, UserKey};
+
+use rgj_shared::{
+    protocol::{notifications::WhoseTurn, Protocol, GameStartNotification,TurnChangeNotification},
+    Channels,
+};
+
+use crate::resources::UsernameKeyAssociation;
 
 pub struct TurnTracker {
-	pub player: UserKey,
-	pub turn_number: u16,
-	pub time_left: Option<Duration>,
+    pub player: UserKey,
+    pub turn_number: u16,
+    pub time_left: Option<Duration>,
+
+    players: VecDeque<UserKey>,
+}
+
+impl TurnTracker {
+    pub fn new(
+        mut server: Server<Protocol, Channels>,
+        user_key_assoc: &UsernameKeyAssociation,
+
+        mut players: VecDeque<UserKey>,
+        turn_timers: Option<Duration>,
+    ) -> TurnTracker {
+        let player = players.pop_front().unwrap();
+        players.push_back(player);
+
+        for key in server.user_keys() {
+            if key == player {
+                server.send_message(
+                    &key,
+                    Channels::GameNotification,
+                    &GameStartNotification::new_complete(WhoseTurn::Yours),
+                );
+            } else {
+                server.send_message(
+                    &key,
+                    Channels::GameNotification,
+                    &GameStartNotification::new_complete(WhoseTurn::Player(
+                        user_key_assoc.get_from_key(&player).unwrap().to_owned(),
+                    )),
+                );
+            }
+        }
+
+        server.send_all_updates();
+
+        TurnTracker {
+            player: player,
+            turn_number: 0,
+            time_left: turn_timers,
+            players,
+        }
+    }
+
+    pub fn next(
+        &mut self,
+        server: &mut Server<Protocol, Channels>,
+        user_key_assoc: &UsernameKeyAssociation,
+    ) {
+        let player = self.players.pop_front().unwrap();
+        self.players.push_back(player);
+
+        self.player = player;
+
+        for key in server.user_keys() {
+            if key == player {
+                server.send_message(
+                    &key,
+                    Channels::GameNotification,
+                    &TurnChangeNotification::new_complete(WhoseTurn::Yours),
+                );
+            } else {
+                server.send_message(
+                    &key,
+                    Channels::GameNotification,
+                    &TurnChangeNotification::new_complete(WhoseTurn::Player(
+                        user_key_assoc.get_from_key(&player).unwrap().to_owned(),
+                    )),
+                );
+            }
+        }
+    }
 }

@@ -1,5 +1,5 @@
 use bevy::{ecs::query, prelude::*};
-use naia_bevy_server::events::MessageEvent;
+use naia_bevy_server::{events::MessageEvent, Server};
 
 use rgj_shared::{
     protocol::{
@@ -14,17 +14,20 @@ use rgj_shared::{
 use super::resources::TurnTracker;
 use crate::{
     components::TileMap,
-    resources::{KeyMapAssociation, MainRoom},
+    resources::{KeyMapAssociation, MainRoom, UsernameKeyAssociation},
 };
 
 pub fn receive_input_event(
+    mut server: Server<Protocol, Channels>,
+
     mut event_reader: EventReader<MessageEvent<Protocol, Channels>>,
 
     query_tilemap: Query<&TileMap>,
     mut query_tile: Query<&mut MapSync>,
 
     map_conf: Res<MapConfig>,
-    turn_tracker: Res<TurnTracker>,
+    mut turn_tracker: ResMut<TurnTracker>,
+    user_key_assoc: Res<UsernameKeyAssociation>,
     main_room: Res<MainRoom>,
     key_map_assoc: Res<KeyMapAssociation>,
 ) {
@@ -69,6 +72,8 @@ pub fn receive_input_event(
                         }
                     }
                 }
+
+                turn_tracker.next(&mut server, &user_key_assoc);
             }
         }
     }
