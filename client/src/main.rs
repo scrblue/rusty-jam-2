@@ -77,5 +77,12 @@ fn main() {
                 )
                 .into(),
         )
+        .add_system_set_to_stage(
+			Stage::Tick,
+			ConditionSet::new()
+				.run_in_state(GameState::WaitingForMoreConnectionsMenu)
+				.with_system(waiting_for_more_connections_menu::systems::tick)
+				.into()
+        )
         .run();
 }

@@ -41,8 +41,13 @@ pub fn init(mut commands: Commands, mut server: Server<Protocol, Channels>, args
 pub fn tick(mut commands: Commands, mut server: Server<Protocol, Channels>, args: Res<Args>) {
     // If there are exactly enough players, start the countdown
     if server.users_count() == args.num_players as usize {
+        info!("Transitioning to countdown phase");
         commands.insert_resource(NextState(GameState::Countdown));
     }
+
+	for (_, user_key, entity) in server.scope_checks() {
+		server.user_scope(&user_key).include(&entity);
+	}
 
     // Update players on how many new connections they're waiting on
     // XXX: Be VERY certain the user count never exceeds the num_players so that it may never exceed u8::MAX.
@@ -50,4 +55,6 @@ pub fn tick(mut commands: Commands, mut server: Server<Protocol, Channels>, args
     for key in server.user_keys() {
         server.send_message(&key, Channels::WaitingOnPlayers, &waiting_on);
     }
+
+    server.send_all_updates();
 }

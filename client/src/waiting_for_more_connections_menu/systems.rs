@@ -53,7 +53,6 @@ pub fn receive_waiting_on_players_message(
     mut waiting_for: ResMut<WaitingFor>,
 ) {
     for event in event_reader.iter() {
-        info!("RECEIVE EVENT");
         if let MessageEvent(Channels::WaitingOnPlayers, Protocol::WaitingOnPlayers(waiting)) = event
         {
             waiting_for.0 = *waiting.num_waiting_for;

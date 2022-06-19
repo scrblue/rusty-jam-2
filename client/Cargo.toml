@@ -5,22 +5,8 @@ publish = false
 authors = ["Daniel Lyne <DLyne@pm.me>"]
 edition = "2021"
 
-[profile.dev.package."*"]
-opt-level = 3
-
-[profile.dev]
-opt-level = 1
-
-[profile.release]
-lto = true
-codegen-units = 1
-
 [features]
 default = [
-    "bevy/bevy_winit",
-    "bevy/render",
-    "bevy/png",
-    "bevy/x11",
     "bevy_kira_audio/ogg"
 ]
 
@@ -29,7 +15,7 @@ dev = [
 ]
 
 [dependencies]
-bevy = { version = "0.7", default-features = false }
+bevy = { version = "0.7", default-features = true }
 bevy_egui = "0.14"
 bevy_kira_audio = { version = "0.10" }
 bevy_asset_loader = { version = "0.11" }

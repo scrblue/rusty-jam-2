@@ -87,8 +87,7 @@ pub fn disconnection_event(
 }
 
 pub fn receive_message_event(mut event_reader: EventReader<MessageEvent<Protocol, Channels>>) {
-    // NOOP in this state
     for _ in event_reader.iter() {
-        info!("KEEP ALIVE");
+        // Simply reads and discards ClientKeepAlive events
     }
 }
