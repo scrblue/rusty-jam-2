@@ -9,6 +9,6 @@ publish = false
 bevy = "0.7.0"
 clap = { version= "3.1", features = ["derive"] }
 iyes_loopless = "0.5"
-naia-bevy-server = { git = "https://github.com/naia-lib/naia.git", features = ["use-udp"] }
+naia-bevy-server = { git = "https://github.com/naia-lib/naia.git", features = ["use-webrtc"] }
 
 rgj_shared = { path = "../shared" }
