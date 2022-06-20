@@ -11,10 +11,10 @@ pub struct TileSelectedEvent(pub AxialCoordinates);
 #[derive(Default)]
 pub struct TileSelectedState {
     pub error: String,
-	pub moving_unit: Option<Entity>,
+    pub moving_unit: Option<Entity>,
 
-	pub tile: Option<MapSync>,
-	pub unit: Option<UnitSync>,
+    pub tile: Option<MapSync>,
+    pub unit: Option<UnitSync>,
 }
 
 pub struct TurnTracker {

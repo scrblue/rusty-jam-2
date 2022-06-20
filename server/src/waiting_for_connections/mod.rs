@@ -19,7 +19,7 @@ use rgj_shared::{
 use crate::{
     components::{AuthoritativeTileMap, TileMap},
     countdown::resources::{Countdown, TimeSinceLastCount},
-    resources::{KeyMapAssociation, MainRoom, UsernameKeyAssociation, KeyUnitsAssociation},
+    resources::{KeyMapAssociation, KeyUnitsAssociation, MainRoom, UsernameKeyAssociation},
     Args, GameState, MapOption,
 };
 

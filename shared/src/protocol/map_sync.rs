@@ -32,21 +32,21 @@ pub enum TileType {
 
 impl TileType {
     pub fn to_string(&self) -> String {
-		match self {
-    		TileType::Fog => format!("Fog"),
+        match self {
+            TileType::Fog => format!("Fog"),
 
-    		TileType::Grass => format!("Grass"),
-    		TileType::Forest => format!("Forest"),
-    		TileType::Desert => format!("Desert"),
+            TileType::Grass => format!("Grass"),
+            TileType::Forest => format!("Forest"),
+            TileType::Desert => format!("Desert"),
 
-    		TileType::Ocean => format!("Ocean"),
-    		TileType::River => format!("River"),
-    		TileType::DesertOasis => format!("DesertOasis"),
+            TileType::Ocean => format!("Ocean"),
+            TileType::River => format!("River"),
+            TileType::DesertOasis => format!("DesertOasis"),
 
-    		TileType::ClearSky => format!("Clear Skies"),
-    		TileType::WindySky => format!("Windy Skies"),
-    		TileType::StormySky => format!("Stormy Skies"),
-		}
+            TileType::ClearSky => format!("Clear Skies"),
+            TileType::WindySky => format!("Windy Skies"),
+            TileType::StormySky => format!("Stormy Skies"),
+        }
     }
 }
 

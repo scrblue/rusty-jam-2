@@ -8,8 +8,10 @@ use naia_bevy_client::{
 
 use rgj_shared::{
     protocol::{
-        notifications::WhoseTurn, player_input::PlayerInputVariant, map_sync::{MapSync, TileType}, PlayerInput, Protocol,
-        ProtocolKind,
+        map_sync::{MapSync, TileType},
+        notifications::WhoseTurn,
+        player_input::PlayerInputVariant,
+        PlayerInput, Protocol, ProtocolKind,
     },
     Channels,
 };
@@ -93,7 +95,7 @@ pub fn game_menu(
 
         client.send_message(
             Channels::PlayerInput,
-            &PlayerInput::new_complete(std::mem::take(&mut turn_tracker.recorded_commands)),
+            &PlayerInput::new_complete(std::mem::take(&mut turn_tracker.recorded_commands), true),
         );
     }
 }
