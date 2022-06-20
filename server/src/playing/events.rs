@@ -160,7 +160,6 @@ fn handle_move_entity(
             step_r.round() as u16,
         ));
     }
-    info!("Travels Through: {:?}", travels_through);
 
     // Ensure that the player's unit has enough stamina and has the requisite terrain
     // types to cross this terrain
