@@ -1,7 +1,20 @@
 use std::collections::HashMap;
 
 use bevy::prelude::Entity;
-use rgj_shared::protocol::{notifications::WhoseTurn, player_input::PlayerInputVariant};
+use rgj_shared::{
+    behavior::AxialCoordinates,
+    protocol::{notifications::WhoseTurn, player_input::PlayerInputVariant, MapSync, UnitSync},
+};
+
+pub struct TileSelectedEvent(pub AxialCoordinates);
+
+#[derive(Default)]
+pub struct TileSelectedState {
+	pub moving_unit: Option<Entity>,
+
+	pub tile: Option<MapSync>,
+	pub unit: Option<UnitSync>,
+}
 
 pub struct TurnTracker {
     pub whose_turn: WhoseTurn,

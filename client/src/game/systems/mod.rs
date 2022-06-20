@@ -19,6 +19,7 @@ use crate::TileSprites;
 use super::resources::{Map, TurnTracker};
 
 pub mod input;
+pub mod tile_info;
 
 pub fn update_component_event(
     mut event_reader: EventReader<UpdateComponentEvent<ProtocolKind>>,

@@ -1,3 +1,5 @@
+use std::str::Split;
+
 use bevy::{
     input::mouse::{MouseMotion, MouseWheel},
     prelude::*,
@@ -9,7 +11,7 @@ use rgj_shared::{
     protocol::{player_input::PlayerInputVariant, MapSync},
 };
 
-use crate::game::resources::{Map, TurnTracker};
+use crate::game::resources::{Map, TileSelectedEvent, TurnTracker};
 
 pub fn camera_system(
     mut ev_motion: EventReader<MouseMotion>,
@@ -42,4 +44,45 @@ pub fn camera_system(
     }
     camera_trans.translation.x -= pan.x * camera_proj.scale;
     camera_trans.translation.y += pan.y * camera_proj.scale;
+}
+
+pub fn select_entity(
+    mut entity_selected: EventWriter<TileSelectedEvent>,
+
+    camera_transform_query: Query<(&GlobalTransform, &OrthographicProjection)>,
+
+    input_mouse_button: Res<Input<MouseButton>>,
+    windows: Res<Windows>,
+) {
+    if input_mouse_button.just_pressed(MouseButton::Left) {
+        let window = windows.get_primary().unwrap();
+
+        if let Some(position) = window.cursor_position() {
+            let (camera_trans, camera_proj) = camera_transform_query.get_single().unwrap();
+
+            let camera_x = camera_trans.translation.x;
+            let camera_y = camera_trans.translation.y;
+            let camera_scale = camera_proj.scale;
+
+            let x = position.x * camera_scale + camera_x - window.width() * camera_scale / 2.0;
+            let y = position.y * camera_scale + camera_y - window.height() * camera_scale / 2.0;
+
+            let mut q = (f32::sqrt(3.0) / 3.0 * x - 1.0 / 3.0 * y) / HEXAGON_SIZE;
+            let mut r = (2.0 / 3.0 * y) / HEXAGON_SIZE;
+
+			q = q.round();
+			r = r.round();
+
+            if q >= 0.0 && r >= 0.0 && q <= u16::MAX as f32 && r <= u16::MAX as f32 {
+                let q = q as u16;
+                let r = r as u16;
+
+                let qr = AxialCoordinates::new(q, r);
+
+                info!("Clicked {} {}", q, r);
+
+                entity_selected.send(TileSelectedEvent(qr));
+            }
+        }
+    }
 }

@@ -30,6 +30,26 @@ pub enum TileType {
     StormySky,
 }
 
+impl TileType {
+    pub fn to_string(&self) -> String {
+		match self {
+    		TileType::Fog => format!("Fog"),
+
+    		TileType::Grass => format!("Grass"),
+    		TileType::Forest => format!("Forest"),
+    		TileType::Desert => format!("Desert"),
+
+    		TileType::Ocean => format!("Ocean"),
+    		TileType::River => format!("River"),
+    		TileType::DesertOasis => format!("DesertOasis"),
+
+    		TileType::ClearSky => format!("Clear Skies"),
+    		TileType::WindySky => format!("Windy Skies"),
+    		TileType::StormySky => format!("Stormy Skies"),
+		}
+    }
+}
+
 #[derive(Debug, Error)]
 #[error("tile number given is out of bounds")]
 pub struct TileIdOutOfBounds;

@@ -20,7 +20,7 @@ use super::resources::SecondsLeft;
 use crate::{
     game::{
         components::TileWithBuilding,
-        resources::{Map, TurnTracker},
+        resources::{Map, TileSelectedState, TurnTracker},
     },
     GameState, TileSprites,
 };
@@ -170,6 +170,7 @@ pub fn receive_game_start_notification(
             event
         {
             commands.insert_resource(TurnTracker::new(&gsn.whose_turn));
+            commands.insert_resource(TileSelectedState::default());
             commands.insert_resource(NextState(GameState::Game));
         }
     }

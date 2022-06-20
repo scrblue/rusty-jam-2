@@ -10,7 +10,7 @@ use naia_bevy_client::{ClientConfig, Plugin as ClientPlugin, Stage};
 use rgj_shared::{protocol::Protocol, shared_config, Channels};
 
 use rgj_client::{
-    connect_menu, countdown_menu::systems as countdown_systems, game::systems as game_systems,
+    connect_menu, countdown_menu::systems as countdown_systems, game::{systems as game_systems, resources::TileSelectedEvent},
     waiting_for_more_connections_menu::systems as waiting_systems, GameState,
 };
 
@@ -24,6 +24,7 @@ fn main() {
             title: "Bevy game".to_string(), // ToDo
             ..Default::default()
         })
+        .add_event::<TileSelectedEvent>()
         .add_plugins(DefaultPlugins)
         .add_plugin(EguiPlugin)
         .add_plugin(ClientPlugin::<Protocol, Channels>::new(
@@ -128,6 +129,8 @@ fn main() {
                 .run_in_state(GameState::Game)
                 .with_system(game_systems::game_menu)
                 .with_system(game_systems::input::camera_system)
+                .with_system(game_systems::input::select_entity)
+                .with_system(game_systems::tile_info::display_info)
                 .into(),
         )
         .run();
