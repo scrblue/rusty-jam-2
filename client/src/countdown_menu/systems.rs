@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContext};
 use bevy_prototype_lyon::prelude::*;
@@ -11,7 +9,10 @@ use naia_bevy_client::{
 
 use rgj_shared::{
     behavior::HEXAGON_SIZE,
-    protocol::{ClientKeepAlive, MapSync, Protocol, ProtocolKind},
+    protocol::{
+        map_sync::{MapSync, TileStructure},
+        ClientKeepAlive, Protocol, ProtocolKind,
+    },
     Channels,
 };
 
@@ -72,6 +73,21 @@ pub fn insert_component_event(
                         },
                         transform,
                     ));
+
+				// Insert the building if there is one
+                if *map_sync.structure != TileStructure::None {
+                    let color: Color = (*map_sync.structure).into();
+
+                    commands.entity(*entity).insert_bundle(SpriteBundle {
+                        sprite: Sprite {
+                            color,
+                            custom_size: Some(Vec2::new(65.0, 65.0)),
+                            ..Default::default()
+                        },
+                        transform,
+                        ..Default::default()
+                    });
+                }
 
                 map.coords_to_entity.insert((q, r, z), *entity);
             }

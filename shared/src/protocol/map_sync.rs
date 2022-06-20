@@ -34,6 +34,10 @@ pub enum TileType {
 #[error("tile number given is out of bounds")]
 pub struct TileIdOutOfBounds;
 
+#[derive(Debug, Error)]
+#[error("the given character is not a valid map character")]
+pub struct MapCharacterUnrecognized;
+
 impl TryFrom<u8> for TileType {
     type Error = TileIdOutOfBounds;
     fn try_from(num: u8) -> Result<Self, TileIdOutOfBounds> {
@@ -77,6 +81,27 @@ impl From<TileType> for u8 {
     }
 }
 
+impl TryFrom<char> for TileType {
+    type Error = MapCharacterUnrecognized;
+    fn try_from(value: char) -> Result<Self, Self::Error> {
+        match value {
+            'G' => Ok(TileType::Grass),
+            'F' => Ok(TileType::Forest),
+            'D' => Ok(TileType::Desert),
+
+            'O' => Ok(TileType::Ocean),
+            'R' => Ok(TileType::River),
+            'o' => Ok(TileType::DesertOasis),
+
+            'C' => Ok(TileType::ClearSky),
+            'W' => Ok(TileType::WindySky),
+            'S' => Ok(TileType::StormySky),
+
+            _ => Err(MapCharacterUnrecognized),
+        }
+    }
+}
+
 impl From<TileType> for Color {
     fn from(ty: TileType) -> Self {
         match ty {
@@ -93,6 +118,38 @@ impl From<TileType> for Color {
             TileType::ClearSky => Color::NONE,
             TileType::WindySky => Color::WHITE,
             TileType::StormySky => Color::GRAY,
+        }
+    }
+}
+
+#[derive(Copy, Debug, Eq)]
+#[derive_serde]
+pub enum TileStructure {
+    None,
+    City,
+    GenomeFacility,
+}
+
+impl TryFrom<char> for TileStructure {
+    type Error = MapCharacterUnrecognized;
+    fn try_from(value: char) -> Result<Self, Self::Error> {
+        match value {
+            '_' => Ok(TileStructure::None),
+
+            'c' => Ok(TileStructure::City),
+            'g' => Ok(TileStructure::GenomeFacility),
+
+            _ => Err(MapCharacterUnrecognized),
+        }
+    }
+}
+
+impl From<TileStructure> for Color {
+    fn from(ty: TileStructure) -> Self {
+        match ty {
+            TileStructure::None => Color::NONE,
+            TileStructure::City => Color::DARK_GRAY,
+            TileStructure::GenomeFacility => Color::SILVER,
         }
     }
 }
@@ -123,4 +180,5 @@ pub struct MapSync {
     pub position: Property<AxialCoordinates>,
     pub layer: Property<u16>,
     pub tile_type: Property<TileType>,
+    pub structure: Property<TileStructure>,
 }

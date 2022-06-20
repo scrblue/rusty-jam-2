@@ -1,7 +1,7 @@
 // disable console on windows for release builds
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use bevy::{prelude::*, utils::tracing::instrument::WithSubscriber};
+use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
 use bevy_prototype_lyon::prelude::ShapePlugin;
 use iyes_loopless::prelude::*;

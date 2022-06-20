@@ -1,14 +1,13 @@
 use std::time::Duration;
 
 use bevy::prelude::*;
-use clap::command;
 use iyes_loopless::state::NextState;
 use naia_bevy_server::Server;
 
 use rgj_shared::{
     behavior::AxialCoordinates,
     protocol::{
-        map_sync::{MapSync, TileType, MAP_HEIGHT},
+        map_sync::{MapSync, TileStructure, TileType, MAP_HEIGHT},
         Countdown as CountdownPacket, Protocol,
     },
     resources::MapConfig,
@@ -122,6 +121,7 @@ pub fn init(
                                     AxialCoordinates::new(q, r),
                                     z,
                                     TileType::Fog,
+                                    TileStructure::None,
                                 ))
                                 .id(),
                         );

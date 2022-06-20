@@ -9,7 +9,7 @@ use naia_bevy_server::{Server, ServerAddrs};
 use rgj_shared::{
     behavior::AxialCoordinates,
     protocol::{
-        map_sync::{MapSync, TileType, MAP_HEIGHT},
+        map_sync::{MapSync, TileStructure, TileType, MAP_HEIGHT},
         Protocol, WaitingOnPlayers,
     },
     resources::MapConfig,
@@ -25,10 +25,22 @@ use crate::{
 
 pub mod events;
 
-fn init_tile(commands: &mut Commands, q: u16, r: u16, z: u16, tile: TileType) -> Entity {
+fn init_tile(
+    commands: &mut Commands,
+    q: u16,
+    r: u16,
+    z: u16,
+    tile: TileType,
+    structure: TileStructure,
+) -> Entity {
     commands
         .spawn()
-        .insert(MapSync::new_complete(AxialCoordinates::new(q, r), z, tile))
+        .insert(MapSync::new_complete(
+            AxialCoordinates::new(q, r),
+            z,
+            tile,
+            structure,
+        ))
         .id()
 }
 
@@ -56,6 +68,7 @@ pub fn init(mut commands: Commands, mut server: Server<Protocol, Channels>, args
                                 r,
                                 z,
                                 TileType::ClearSky,
+                                TileStructure::None,
                             ));
                         } else {
                             auth_map_entities.push(init_tile(
@@ -64,6 +77,7 @@ pub fn init(mut commands: Commands, mut server: Server<Protocol, Channels>, args
                                 r,
                                 z,
                                 TileType::Ocean,
+                                TileStructure::None,
                             ));
                         }
                     }
@@ -92,7 +106,7 @@ pub fn init(mut commands: Commands, mut server: Server<Protocol, Channels>, args
         MapOption::Load { file_path } => {
             let file_string = std::fs::read_to_string(file_path).expect("Given map invalid");
 
-            let mut auth_map_entities = Vec::with_capacity(file_string.chars().count());
+            let mut auth_map_entities = Vec::with_capacity(file_string.chars().count() * 2 / 3);
 
             // Will be the length of each line
             let mut x_size = 0;
@@ -112,7 +126,7 @@ pub fn init(mut commands: Commands, mut server: Server<Protocol, Channels>, args
                             panic!("Given map's lines must be equal in length")
                         }
 
-						char_count_for_line = 0;
+                        char_count_for_line = 0;
                         line_count += 1;
                     }
 
@@ -122,110 +136,44 @@ pub fn init(mut commands: Commands, mut server: Server<Protocol, Channels>, args
                 }
             }
 
-            if line_count % 2 != 0 {
-                panic!("Given map must have an even amount of lines")
+            if line_count % 3 != 0 {
+                panic!("Given map must havea number of lines divisible by three")
             }
 
-            let y_size = line_count / 2;
+            let y_size = line_count / 3;
 
-            let mut chars = file_string.chars();
+            // Read the tiles from the ground and air layers
+            let tiles = file_string
+                .chars()
+                .filter(|c| *c != '\n')
+                .take(y_size * 2 * x_size)
+                .map(TryInto::try_into)
+                .collect::<Result<Vec<TileType>, _>>()
+                .expect("Unrecognized character");
 
+            // Then read structures from the remaining layer
+            let structures = file_string
+                .chars()
+                .filter(|c| *c != '\n')
+                .skip(y_size * 2 * x_size)
+                .map(TryInto::try_into)
+                .collect::<Result<Vec<TileStructure>, _>>()
+                .expect("Unrecognized character");
+
+            // Consume them one by one filling the Vec
+            let mut tiles = tiles.into_iter();
+            let mut structures = structures.into_iter();
             for z in 0..MAP_HEIGHT {
                 for r in 0..y_size {
                     for q in 0..x_size {
-                        // SKip newlines
-                        let mut next = chars.next().unwrap();
-                        if next == '\n' {
-                            next = chars.next().unwrap();
-                        }
-
-                        match next {
-                            'G' => {
-                                auth_map_entities.push(init_tile(
-                                    &mut commands,
-                                    q,
-                                    r,
-                                    z,
-                                    TileType::Grass,
-                                ));
-                            }
-                            'F' => {
-                                auth_map_entities.push(init_tile(
-                                    &mut commands,
-                                    q,
-                                    r,
-                                    z,
-                                    TileType::Forest,
-                                ));
-                            }
-                            'D' => {
-                                auth_map_entities.push(init_tile(
-                                    &mut commands,
-                                    q,
-                                    r,
-                                    z,
-                                    TileType::Desert,
-                                ));
-                            }
-
-                            'O' => {
-                                auth_map_entities.push(init_tile(
-                                    &mut commands,
-                                    q,
-                                    r,
-                                    z,
-                                    TileType::Ocean,
-                                ));
-                            }
-                            'R' => {
-                                auth_map_entities.push(init_tile(
-                                    &mut commands,
-                                    q,
-                                    r,
-                                    z,
-                                    TileType::River,
-                                ));
-                            }
-                            'o' => {
-                                auth_map_entities.push(init_tile(
-                                    &mut commands,
-                                    q,
-                                    r,
-                                    z,
-                                    TileType::DesertOasis,
-                                ));
-                            }
-
-                            'C' => {
-                                auth_map_entities.push(init_tile(
-                                    &mut commands,
-                                    q,
-                                    r,
-                                    z,
-                                    TileType::ClearSky,
-                                ));
-                            }
-                            'W' => {
-                                auth_map_entities.push(init_tile(
-                                    &mut commands,
-                                    q,
-                                    r,
-                                    z,
-                                    TileType::WindySky,
-                                ));
-                            }
-                            'S' => {
-                                auth_map_entities.push(init_tile(
-                                    &mut commands,
-                                    q,
-                                    r,
-                                    z,
-                                    TileType::StormySky,
-                                ));
-                            }
-
-                            c => panic!("Unrecognized character in map: {}", c),
-                        }
+                        auth_map_entities.push(init_tile(
+                            &mut commands,
+                            q as u16,
+                            r as u16,
+                            z,
+                            tiles.next().unwrap(),
+                            structures.next().unwrap_or(TileStructure::None),
+                        ));
                     }
                 }
             }
@@ -244,8 +192,8 @@ pub fn init(mut commands: Commands, mut server: Server<Protocol, Channels>, args
             });
 
             commands.insert_resource(MapConfig {
-                size_width: x_size,
-                size_height: y_size,
+                size_width: x_size as u16,
+                size_height: y_size as u16,
             });
         }
     }
