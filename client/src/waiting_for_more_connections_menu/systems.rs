@@ -10,7 +10,7 @@ use naia_bevy_client::{
 
 use crate::{
     game::resources::Map, waiting_for_more_connections_menu::resources::WaitingFor,
-    ConnectionInformation, GameState,
+    ConnectionInformation, GameState, TileSprites,
 };
 use rgj_shared::{
     protocol::{ClientKeepAlive, Identification, Protocol, ProtocolKind},
@@ -22,6 +22,7 @@ pub fn init(
     mut client: Client<Protocol, Channels>,
 
     mut conn_info: ResMut<ConnectionInformation>,
+    assets: Res<AssetServer>,
 ) {
     client.auth(Identification::new_complete(
         std::mem::take(&mut conn_info.username),
@@ -32,6 +33,30 @@ pub fn init(
     commands.insert_resource(WaitingFor(0));
     commands.insert_resource(Map {
         coords_to_entity: HashMap::new(),
+    });
+
+    let beach = assets.load("tiles/BeachHex.png");
+    let clear_sky = assets.load("tiles/ClearSkyHex.png");
+    let desert = assets.load("tiles/DesertHex.png");
+    let forest = assets.load("tiles/ForestHex.png");
+    let grass = assets.load("tiles/GrassHex.png");
+    let island = assets.load("tiles/IslandHex.png");
+    let oasis = assets.load("tiles/OasisHex.png");
+    let ocean = assets.load("tiles/OceanHex.png");
+    let stormy_sky = assets.load("tiles/StorySkyHex.png");
+    let windy_sky = assets.load("tiles/WindySkyHex.png");
+
+    commands.insert_resource(TileSprites {
+        beach,
+        clear_sky,
+        desert,
+        forest,
+        grass,
+        island,
+        oasis,
+        ocean,
+        stormy_sky,
+        windy_sky,
     });
 }
 
