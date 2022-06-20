@@ -1,4 +1,4 @@
-use bevy::prelude::{Component};
+use bevy::prelude::Component;
 use naia_shared::{Property, Replicate};
 
 use crate::{behavior::AxialCoordinates, components::genome::Hybrid};
@@ -14,4 +14,3 @@ pub struct UnitSync {
     pub current_health: Property<u16>,
     pub stamina_remaining: Property<u16>,
 }
-

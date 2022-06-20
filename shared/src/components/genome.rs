@@ -270,17 +270,17 @@ pub struct AnimalType {
 #[derive(Copy)]
 #[derive_serde]
 pub struct HeadStats {
-    attack_damage: u16,
-    viewing_distance: u16,
-    smarts: u16,
+    pub attack_damage: u16,
+    pub viewing_distance: u16,
+    pub smarts: u16,
 }
 
 #[derive(Copy)]
 #[derive_serde]
 pub struct BodyStats {
-    health: u16,
+    pub health: u16,
     // The amount to divide the tiles per turn by. Higher is worse.
-    size_penalty: f32,
+    pub size_penalty: f32,
 }
 
 #[derive(Copy)]

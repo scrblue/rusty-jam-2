@@ -1,13 +1,15 @@
 use std::time::Duration;
 
-use bevy::prelude::*;
+use bevy::{prelude::*, render::texture::DEFAULT_IMAGE_HANDLE};
 use iyes_loopless::state::NextState;
-use naia_bevy_server::Server;
+use naia_bevy_server::{shared::Random, Server};
 
 use rgj_shared::{
     behavior::AxialCoordinates,
+    components::genome::{Hybrid, CHICKEN, DEER},
     protocol::{
         map_sync::{MapSync, TileStructure, TileType, MAP_HEIGHT},
+        unit_sync::UnitSync,
         Countdown as CountdownPacket, Protocol,
     },
     resources::MapConfig,
@@ -16,7 +18,7 @@ use rgj_shared::{
 
 use crate::{
     components::{PerspectiveTileMap, TileMap},
-    resources::{KeyMapAssociation, MainRoom},
+    resources::{KeyMapAssociation, KeyUnitsAssociation, MainRoom},
     Args, GameState,
 };
 
@@ -37,10 +39,22 @@ pub fn init(
     main_room: Res<MainRoom>,
     map_config: Res<MapConfig>,
     mut key_map_assoc: ResMut<KeyMapAssociation>,
+    mut key_units_assoc: ResMut<KeyUnitsAssociation>,
 ) {
     info!("In countdown state -- preparing maps for players");
 
     let auth_map = &query_tilemap.get(main_room.map_entity).unwrap().children;
+
+    // TODO: Map-aware spawning of intitial units
+    // TODO: Don't spawn players too close
+    let user_count = server.users_count();
+    let mut starting_positions = Vec::with_capacity(user_count);
+    for i in 0..user_count {
+        let q = Random::gen_range_u32(0, map_config.size_width.into()) as u16;
+        let r = Random::gen_range_u32(0, map_config.size_height.into()) as u16;
+
+        starting_positions.push(AxialCoordinates::new(q, r));
+    }
 
     for (index, key) in server.user_keys().into_iter().enumerate() {
         // FIXME: Support more than four players
@@ -48,60 +62,50 @@ pub fn init(
             map_config.size_width as usize * map_config.size_height as usize * 2,
         );
 
-        let (valid_qs, valid_rs, valid_zs) = if index == 0 {
-            // Spawn player on left side
-            let valid_qs = [0, 1, 2];
+        let unit = server
+            .spawn()
+            .enter_room(&main_room.key)
+            .insert(UnitSync::new_complete(
+                starting_positions[index],
+                0,
+                Hybrid::new(DEER.clone(), DEER.clone(), DEER.clone()),
+                DEER.body.health,
+                DEER.limbs.terrain_a.tiles_per_turn.into(),
+            ))
+            .id();
 
-            let mid_y = map_config.size_height / 2;
-            let valid_rs = [mid_y - 1, mid_y, mid_y + 1];
+        key_units_assoc.insert(key, unit);
 
-            let valid_zs = [0, 1];
+        let viewing_distance = DEER.head.viewing_distance as i32;
 
-            (valid_qs, valid_rs, valid_zs)
-        } else if index == 1 {
-            // Spawn player on right side
-            let max_x = map_config.size_width - 1;
-            let valid_qs = [max_x - 2, max_x - 1, max_x];
-
-            let mid_y = map_config.size_height / 2;
-            let valid_rs = [mid_y - 1, mid_y, mid_y + 1];
-
-            let valid_zs = [0, 1];
-
-            (valid_qs, valid_rs, valid_zs)
-        } else if index == 2 {
-            // Spawn player on top
-            let mid_x = map_config.size_width / 2;
-            let valid_qs = [mid_x - 1, mid_x, mid_x + 1];
-
-            let max_y = map_config.size_height - 1;
-            let valid_rs = [max_y - 2, max_y - 1, max_y];
-
-            let valid_zs = [0, 1];
-
-            (valid_qs, valid_rs, valid_zs)
-        } else {
-            // Spawn player on bottom
-            let mid_x = map_config.size_width / 2;
-            let valid_qs = [mid_x - 1, mid_x, mid_x + 1];
-
-            let valid_rs = [0, 1, 2];
-
-            let valid_zs = [0, 1];
-
-            (valid_qs, valid_rs, valid_zs)
-        };
+        let mut valid_qrs = Vec::new();
+        for q in -viewing_distance..viewing_distance {
+            for r in std::cmp::max(-viewing_distance, -q - viewing_distance)
+                ..std::cmp::min(viewing_distance, -q + viewing_distance)
+            {
+                if q >= 0 && r >= 0 && q <= u16::MAX.into() && r <= u16::MAX.into() {
+                    valid_qrs.push(AxialCoordinates::new(q as u16, r as u16));
+                }
+            }
+        }
 
         for z in 0..MAP_HEIGHT {
             for r in 0..map_config.size_height {
                 for q in 0..map_config.size_width {
-                    // If in valid_xs, valid_ys, and valid_zs, insert auth state into perceived
-                    // state, otherwise insert a fog tile
+                    let qr = AxialCoordinates::new(q, r);
 
-                    if valid_zs.contains(&z) && valid_rs.contains(&r) && valid_qs.contains(&q) {
-                        // Get the authoritative map sync
+                    // If the tile is in view of the initial deer entity, send the authoritative
+                    // state, otherwise send fog
+                    if valid_qrs.contains(&qr) {
                         let map_sync = query_tile
-                            .get(auth_map[TileMap::tile_qrz_to_index(&map_config, q, r, z)])
+                            .get(
+                                auth_map[TileMap::tile_qrz_to_index(
+                                    &map_config,
+                                    qr.column_q,
+                                    qr.row_r,
+                                    z,
+                                )],
+                            )
                             .unwrap()
                             .clone();
 
