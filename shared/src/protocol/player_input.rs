@@ -1,16 +1,17 @@
 use bevy::prelude::Component;
-use naia_shared::{derive_serde, serde, EntityHandle, Property, Replicate};
+use naia_shared::{derive_serde, serde, EntityProperty, Property, Replicate};
 
 use crate::behavior::AxialCoordinates;
 
 #[derive(Component, Replicate)]
 #[protocol_path = "crate::protocol::Protocol"]
 pub struct PlayerInput {
-    pub partial_turn_inputs: Property<Vec<PlayerInputVariant>>,
-    pub end_turn: Property<bool>,
+    pub relevant_entity: EntityProperty,
+    pub partial_turn: Property<PlayerInputVariant>,
 }
 
 #[derive_serde]
 pub enum PlayerInputVariant {
-    MoveEntity(EntityHandle, AxialCoordinates),
+    MoveEntity(AxialCoordinates),
+    EndTurn,
 }

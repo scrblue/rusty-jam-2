@@ -156,14 +156,12 @@ pub fn display_info(
 
                 // Finally if the travel is valid, send the message
                 if can_travel {
-                    let handle = client.entity_to_handle(&entity);
-                    client.send_message(
-                        Channels::PlayerInput,
-                        &PlayerInput::new_complete(
-                            vec![PlayerInputVariant::MoveEntity(handle, desired_pos)],
-                            false,
-                        ),
+                    let mut input = PlayerInput::new_complete(
+                        PlayerInputVariant::MoveEntity(desired_pos),
                     );
+                    input.relevant_entity.set(&client, &entity);
+
+                    client.send_message(Channels::PlayerInput, &input);
                 }
             } else {
                 state.error = "Fatal internal error in UnitSync-less unit".to_owned();

@@ -89,13 +89,9 @@ pub fn game_menu(
     }
 
     if commit_turn {
-        for cmd in &turn_tracker.recorded_commands {
-            // match cmd {}
-        }
-
         client.send_message(
             Channels::PlayerInput,
-            &PlayerInput::new_complete(std::mem::take(&mut turn_tracker.recorded_commands), true),
+            &PlayerInput::new_complete(PlayerInputVariant::EndTurn),
         );
     }
 }
