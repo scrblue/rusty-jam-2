@@ -6,10 +6,7 @@ use bevy_prototype_lyon::prelude::*;
 
 use rgj_shared::{
     behavior::{AxialCoordinates, HEXAGON_SIZE},
-    protocol::{
-        player_input::{ClaimTile, PlayerInputVariant},
-        MapSync,
-    },
+    protocol::{player_input::PlayerInputVariant, MapSync},
 };
 
 use crate::game::resources::{Map, TurnTracker};

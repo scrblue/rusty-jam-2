@@ -1,10 +1,7 @@
 use std::collections::HashMap;
 
 use bevy::prelude::Entity;
-use rgj_shared::protocol::{
-    notifications::WhoseTurn,
-    player_input::{ClaimTile, PlayerInput, PlayerInputVariant},
-};
+use rgj_shared::protocol::{notifications::WhoseTurn, player_input::PlayerInputVariant};
 
 pub struct TurnTracker {
     pub whose_turn: WhoseTurn,
