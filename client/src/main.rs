@@ -67,7 +67,8 @@ fn main() {
                 // Countdown state before sending the first countdown. This is a workaround to make
                 // sure that entities still spawn while this happens
                 .with_system(countdown_systems::spawn_entity_event)
-                .with_system(countdown_systems::insert_component_event)
+                .with_system(countdown_systems::insert_map_sync_event)
+                .with_system(countdown_systems::insert_unit_sync_event)
                 .with_system(waiting_systems::receive_waiting_on_players_message)
                 .with_system(waiting_systems::receive_countdown_message)
                 .into(),
@@ -93,7 +94,8 @@ fn main() {
             ConditionSet::new()
                 .run_in_state(GameState::CountdownMenu)
                 .with_system(countdown_systems::spawn_entity_event)
-                .with_system(countdown_systems::insert_component_event)
+                .with_system(countdown_systems::insert_map_sync_event)
+                .with_system(countdown_systems::insert_unit_sync_event)
                 .with_system(countdown_systems::receive_countdown_message)
                 .with_system(countdown_systems::receive_game_start_notification)
                 .into(),

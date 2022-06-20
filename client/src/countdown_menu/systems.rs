@@ -11,7 +11,7 @@ use rgj_shared::{
     behavior::{HEXAGON_HEIGHT, HEXAGON_SIZE, HEXAGON_WIDTH},
     protocol::{
         map_sync::{MapSync, TileStructure, TileType},
-        ClientKeepAlive, Protocol, ProtocolKind,
+        ClientKeepAlive, Protocol, ProtocolKind, UnitSync,
     },
     Channels,
 };
@@ -35,7 +35,44 @@ pub fn spawn_entity_event(mut event_reader: EventReader<SpawnEntityEvent>) {
     }
 }
 
-pub fn insert_component_event(
+pub fn insert_unit_sync_event(
+    mut event_reader: EventReader<InsertComponentEvent<ProtocolKind>>,
+    mut commands: Commands,
+
+    query: Query<&UnitSync>,
+
+    mut map: ResMut<Map>,
+) {
+    for event in event_reader.iter() {
+        if let InsertComponentEvent(entity, ProtocolKind::UnitSync) = event {
+            if let Ok(unit_sync) = query.get(*entity) {
+                let q = unit_sync.position.column_q;
+                let r = unit_sync.position.row_r;
+                let z = *unit_sync.layer;
+
+                let mut transform = Transform::from_xyz(
+                    HEXAGON_SIZE * (q as f32 * f32::sqrt(3.0) + (f32::sqrt(3.0) / 2.0 * r as f32)),
+                    HEXAGON_SIZE * (r as f32 * 3.0 / 2.0),
+                    z as f32 * -1.0 + 0.9,
+                );
+
+                commands.entity(*entity).insert_bundle(SpriteBundle {
+                    sprite: Sprite {
+                        custom_size: Some(Vec2::new(32.0, 32.0)),
+                        color: Color::FUCHSIA,
+                        ..Default::default()
+                    },
+                    transform,
+                    ..Default::default()
+                });
+
+                map.coords_to_unit.insert((q, r, z), *entity);
+            }
+        }
+    }
+}
+
+pub fn insert_map_sync_event(
     mut event_reader: EventReader<InsertComponentEvent<ProtocolKind>>,
     mut commands: Commands,
 
@@ -59,7 +96,7 @@ pub fn insert_component_event(
 
                 let texture = match *map_sync.tile_type {
                     // FIXME: Fog should be fog
-                    TileType::Fog => &assets.ocean,
+                    TileType::Fog => &assets.forest,
 
                     TileType::Grass => &assets.grass,
                     TileType::Forest => &assets.forest,
@@ -107,7 +144,7 @@ pub fn insert_component_event(
                         .insert(TileWithBuilding { structure_entity });
                 }
 
-                map.coords_to_entity.insert((q, r, z), *entity);
+                map.coords_to_tile.insert((q, r, z), *entity);
             }
         }
     }

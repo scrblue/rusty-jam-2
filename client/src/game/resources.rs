@@ -18,5 +18,6 @@ impl TurnTracker {
 }
 
 pub struct Map {
-    pub coords_to_entity: HashMap<(u16, u16, u16), Entity>,
+    pub coords_to_tile: HashMap<(u16, u16, u16), Entity>,
+    pub coords_to_unit: HashMap<(u16, u16, u16), Entity>,
 }

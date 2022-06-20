@@ -8,11 +8,13 @@ use naia_bevy_client::{
 
 use rgj_shared::{
     protocol::{
-        notifications::WhoseTurn, player_input::PlayerInputVariant, MapSync, PlayerInput, Protocol,
+        notifications::WhoseTurn, player_input::PlayerInputVariant, map_sync::{MapSync, TileType}, PlayerInput, Protocol,
         ProtocolKind,
     },
     Channels,
 };
+
+use crate::TileSprites;
 
 use super::resources::{Map, TurnTracker};
 
@@ -22,18 +24,33 @@ pub fn update_component_event(
     mut event_reader: EventReader<UpdateComponentEvent<ProtocolKind>>,
 
     query_auth: Query<&MapSync>,
-    mut query_local: Query<&mut DrawMode>,
+    mut query_local: Query<&mut Handle<Image>>,
+
+    assets: Res<TileSprites>,
 ) {
     for event in event_reader.iter() {
         if let UpdateComponentEvent(_tick, entity, ProtocolKind::MapSync) = event {
             if let Ok(map_sync) = query_auth.get(*entity) {
-                let color: Color = (*map_sync.tile_type).into();
+                let mut handle = query_local.get_mut(*entity).unwrap();
+                let texture = match *map_sync.tile_type {
+                    // FIXME: Fog should be fog
+                    TileType::Fog => &assets.ocean,
 
-                let mut draw_mode = query_local.get_mut(*entity).unwrap();
-                *draw_mode = DrawMode::Outlined {
-                    fill_mode: FillMode::color(color),
-                    outline_mode: StrokeMode::new(Color::BLACK, 5.0),
+                    TileType::Grass => &assets.grass,
+                    TileType::Forest => &assets.forest,
+                    TileType::Desert => &assets.desert,
+
+                    TileType::Ocean => &assets.ocean,
+                    // FIXME: River should be river
+                    TileType::River => &assets.ocean,
+                    TileType::DesertOasis => &assets.oasis,
+
+                    TileType::ClearSky => &assets.clear_sky,
+                    TileType::WindySky => &assets.windy_sky,
+                    TileType::StormySky => &assets.stormy_sky,
                 };
+
+                *handle = texture.clone();
             }
         }
     }

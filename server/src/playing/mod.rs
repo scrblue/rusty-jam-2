@@ -11,7 +11,7 @@ use rgj_shared::{
 
 use crate::{
     components::TileMap,
-    resources::{KeyMapAssociation, UsernameKeyAssociation},
+    resources::{KeyMapAssociation, KeyUnitsAssociation, UsernameKeyAssociation},
 };
 
 pub mod events;
@@ -31,20 +31,35 @@ pub fn init(
 
 pub fn tick(
     mut server: Server<Protocol, Channels>,
-    key_map_assoc: Res<KeyMapAssociation>,
     query_tilemap: Query<&TileMap>,
+
+    key_map_assoc: Res<KeyMapAssociation>,
+    key_units_assoc: Res<KeyUnitsAssociation>,
 ) {
     for (_, user_key, entity) in server.scope_checks() {
         // Only send updates from tiles in a user's perceived map
-        // TODO: Information management of units
         let tilemap = &query_tilemap
             .get(*key_map_assoc.get_from_key(&user_key).unwrap())
             .unwrap()
             .children;
 
+        let units = key_units_assoc.get_from_key(user_key);
+
+        let mut in_scope = false;
+
+        if let Some(units) = units {
+            if units.contains(&entity) {
+                in_scope = true;
+                server.user_scope(&user_key).include(&entity);
+            }
+        }
+
         if tilemap.contains(&entity) {
+            in_scope = true;
             server.user_scope(&user_key).include(&entity);
-        } else {
+        }
+
+        if !in_scope {
             server.user_scope(&user_key).exclude(&entity);
         }
     }

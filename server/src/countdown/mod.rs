@@ -79,10 +79,13 @@ pub fn init(
         let viewing_distance = DEER.head.viewing_distance as i32;
 
         let mut valid_qrs = Vec::new();
-        for q in -viewing_distance..viewing_distance {
-            for r in std::cmp::max(-viewing_distance, -q - viewing_distance)
-                ..std::cmp::min(viewing_distance, -q + viewing_distance)
+        for q_offset in -viewing_distance..=viewing_distance {
+            for r_offset in std::cmp::max(-viewing_distance, -q_offset - viewing_distance)
+                ..=std::cmp::min(viewing_distance, -q_offset + viewing_distance)
             {
+                let q = starting_positions[index].column_q as i32 + q_offset;
+                let r = starting_positions[index].row_r as i32 + r_offset;
+
                 if q >= 0 && r >= 0 && q <= u16::MAX.into() && r <= u16::MAX.into() {
                     valid_qrs.push(AxialCoordinates::new(q as u16, r as u16));
                 }
@@ -160,6 +163,7 @@ pub fn tick(
     // Countdown stuff
     mut countdown: ResMut<Countdown>,
     mut time: ResMut<TimeSinceLastCount>,
+    key_units_assoc: Res<KeyUnitsAssociation>,
     clock: Res<Time>,
 ) {
     for (_, user_key, entity) in server.scope_checks() {
@@ -169,9 +173,23 @@ pub fn tick(
             .unwrap()
             .children;
 
+        let units = key_units_assoc.get_from_key(user_key);
+
+        let mut in_scope = false;
+
+        if let Some(units) = units {
+            if units.contains(&entity) {
+                in_scope = true;
+                server.user_scope(&user_key).include(&entity);
+            }
+        }
+
         if tilemap.contains(&entity) {
+            in_scope = true;
             server.user_scope(&user_key).include(&entity);
-        } else {
+        }
+
+        if !in_scope {
             server.user_scope(&user_key).exclude(&entity);
         }
     }

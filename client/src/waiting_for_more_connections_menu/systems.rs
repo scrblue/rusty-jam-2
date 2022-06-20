@@ -32,7 +32,8 @@ pub fn init(
 
     commands.insert_resource(WaitingFor(0));
     commands.insert_resource(Map {
-        coords_to_entity: HashMap::new(),
+        coords_to_tile: HashMap::new(),
+        coords_to_unit: HashMap::new(),
     });
 
     let beach = assets.load("tiles/BeachHex.png");
@@ -43,7 +44,7 @@ pub fn init(
     let island = assets.load("tiles/IslandHex.png");
     let oasis = assets.load("tiles/OasisHex.png");
     let ocean = assets.load("tiles/OceanHex.png");
-    let stormy_sky = assets.load("tiles/StorySkyHex.png");
+    let stormy_sky = assets.load("tiles/StormySkyHex.png");
     let windy_sky = assets.load("tiles/WindySkyHex.png");
 
     commands.insert_resource(TileSprites {
