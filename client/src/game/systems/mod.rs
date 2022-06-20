@@ -7,11 +7,12 @@ use naia_bevy_client::{
 };
 
 use rgj_shared::{
+    behavior::HEXAGON_SIZE,
     protocol::{
         map_sync::{MapSync, TileType},
         notifications::WhoseTurn,
         player_input::PlayerInputVariant,
-        PlayerInput, Protocol, ProtocolKind,
+        PlayerInput, Protocol, ProtocolKind, UnitSync,
     },
     Channels,
 };
@@ -23,7 +24,7 @@ use super::resources::{Map, TurnTracker};
 pub mod input;
 pub mod tile_info;
 
-pub fn update_component_event(
+pub fn update_map_component_event(
     mut event_reader: EventReader<UpdateComponentEvent<ProtocolKind>>,
 
     query_auth: Query<&MapSync>,
@@ -34,10 +35,11 @@ pub fn update_component_event(
     for event in event_reader.iter() {
         if let UpdateComponentEvent(_tick, entity, ProtocolKind::MapSync) = event {
             if let Ok(map_sync) = query_auth.get(*entity) {
+                error!("In here");
                 let mut handle = query_local.get_mut(*entity).unwrap();
                 let texture = match *map_sync.tile_type {
                     // FIXME: Fog should be fog
-                    TileType::Fog => &assets.ocean,
+                    TileType::Fog => &assets.forest,
 
                     TileType::Grass => &assets.grass,
                     TileType::Forest => &assets.forest,
@@ -59,15 +61,57 @@ pub fn update_component_event(
     }
 }
 
+pub fn update_unit_component_event(
+    mut event_reader: EventReader<UpdateComponentEvent<ProtocolKind>>,
+
+    query_unit: Query<&UnitSync>,
+    mut query_local: Query<&mut GlobalTransform>,
+
+    mut map: ResMut<Map>,
+) {
+    for event in event_reader.iter() {
+        if let UpdateComponentEvent(_tick, entity, ProtocolKind::UnitSync) = event {
+            if let Ok(unit_sync) = query_unit.get(*entity) {
+                let (q, r) = (unit_sync.position.column_q, unit_sync.position.row_r);
+
+                let mut transform = query_local.get_mut(*entity).unwrap();
+                let (old_q, old_r) = {
+                    let mut q = (f32::sqrt(3.0) / 3.0 * transform.translation.x
+                        - 1.0 / 3.0 * transform.translation.y)
+                        / HEXAGON_SIZE;
+                    let mut r = (2.0 / 3.0 * transform.translation.y) / HEXAGON_SIZE;
+
+                    q = q.round();
+                    r = r.round();
+
+                    if q >= 0.0 && r >= 0.0 && q <= u16::MAX as f32 && r <= u16::MAX as f32 {
+                        let q = q as u16;
+                        let r = r as u16;
+
+                        (q, r)
+                    } else {
+                        panic!("Could not fit in u16");
+                    }
+                };
+
+                let new = GlobalTransform::from_xyz(
+                    HEXAGON_SIZE * (q as f32 * f32::sqrt(3.0) + (f32::sqrt(3.0) / 2.0 * r as f32)),
+                    HEXAGON_SIZE * (r as f32 * 3.0 / 2.0),
+                    0.9,
+                );
+                *transform = new;
+
+                map.coords_to_unit.remove(&(old_q, old_r, 0));
+                map.coords_to_unit.insert((q, r, 0), *entity);
+            }
+        }
+    }
+}
+
 pub fn game_menu(
     mut client: Client<Protocol, Channels>,
 
-    mut query_draw: Query<&mut DrawMode>,
-    query_auth: Query<&MapSync>,
-
-    map: Res<Map>,
-
-    mut turn_tracker: ResMut<TurnTracker>,
+    turn_tracker: Res<TurnTracker>,
     mut egui_context: ResMut<EguiContext>,
 ) {
     let label = match &turn_tracker.whose_turn {

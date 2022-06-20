@@ -122,7 +122,8 @@ fn main() {
             Stage::ReceiveEvents,
             ConditionSet::new()
                 .run_in_state(GameState::Game)
-                .with_system(game_systems::update_component_event)
+                .with_system(game_systems::update_map_component_event)
+                .with_system(game_systems::update_unit_component_event)
                 .with_system(game_systems::receive_turn_change_notification)
                 .into(),
         )

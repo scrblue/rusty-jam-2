@@ -57,7 +57,7 @@ pub fn select_entity(
     mut egui_context: ResMut<EguiContext>,
 ) {
     if !egui_context.ctx_mut().wants_pointer_input() {
-        if input_mouse_button.just_pressed(MouseButton::Left) {
+        if input_mouse_button.just_pressed(MouseButton::Right) {
             let window = windows.get_primary().unwrap();
 
             if let Some(position) = window.cursor_position() {

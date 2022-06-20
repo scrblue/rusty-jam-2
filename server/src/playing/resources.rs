@@ -4,11 +4,16 @@ use bevy::prelude::*;
 use naia_bevy_server::{Server, UserKey};
 
 use rgj_shared::{
+    behavior::AxialCoordinates,
     protocol::{notifications::WhoseTurn, GameStartNotification, Protocol, TurnChangeNotification},
     Channels,
 };
 
 use crate::resources::UsernameKeyAssociation;
+
+/// Tracks the current moving unit so that it walks along the given path
+/// NOTE: This assumes the path has been verified as valid
+pub struct UnitMoveInformation(pub Option<(Entity, VecDeque<AxialCoordinates>)>);
 
 pub struct TurnTracker {
     pub player: UserKey,

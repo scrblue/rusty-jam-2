@@ -156,9 +156,8 @@ pub fn display_info(
 
                 // Finally if the travel is valid, send the message
                 if can_travel {
-                    let mut input = PlayerInput::new_complete(
-                        PlayerInputVariant::MoveEntity(desired_pos),
-                    );
+                    let mut input =
+                        PlayerInput::new_complete(PlayerInputVariant::MoveEntity(desired_pos));
                     input.relevant_entity.set(&client, &entity);
 
                     client.send_message(Channels::PlayerInput, &input);
@@ -296,11 +295,9 @@ pub fn display_info(
 
     match change {
         Change::MoveUnit(coord, layer) => {
-            state.moving_unit = Some(
-                *map.coords_to_unit
-                    .get(&(coord.column_q, coord.row_r, layer))
-                    .unwrap(),
-            );
+			if let Some(unit) = map.coords_to_unit.get(&(coord.column_q, coord.row_r, layer)) {
+				state.moving_unit = Some(*unit);
+			}
         }
         Change::CancelMoveUnit => {
             state.moving_unit = None;

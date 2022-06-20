@@ -174,13 +174,13 @@ impl From<TileStructure> for Color {
     }
 }
 
-pub fn tile_prz_to_index(map_conf: &MapConfig, p: i32, r: i32, z: i32) -> usize {
+pub fn tile_qrz_to_index(map_conf: &MapConfig, q: i32, r: i32, z: i32) -> usize {
     (z as usize * map_conf.size_width as usize * map_conf.size_height as usize)
         + (r as usize * map_conf.size_width as usize)
-        + p as usize
+        + q as usize
 }
 
-pub fn index_to_tile_prz(map_conf: &MapConfig, index: usize) -> (u16, u16, u16) {
+pub fn index_to_tile_qrz(map_conf: &MapConfig, index: usize) -> (u16, u16, u16) {
     let mut index = index as u16;
 
     let z = index / (map_conf.size_width * map_conf.size_height);
@@ -188,9 +188,9 @@ pub fn index_to_tile_prz(map_conf: &MapConfig, index: usize) -> (u16, u16, u16) 
     index -= z * map_conf.size_width * map_conf.size_height;
 
     let r = index / map_conf.size_width;
-    let p = index % map_conf.size_width;
+    let q = index % map_conf.size_width;
 
-    (p, r, z)
+    (q, r, z)
 }
 
 #[derive(Component, Replicate)]

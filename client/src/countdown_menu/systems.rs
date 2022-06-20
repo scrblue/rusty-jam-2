@@ -50,7 +50,7 @@ pub fn insert_unit_sync_event(
                 let r = unit_sync.position.row_r;
                 let z = *unit_sync.layer;
 
-                let mut transform = Transform::from_xyz(
+                let transform = Transform::from_xyz(
                     HEXAGON_SIZE * (q as f32 * f32::sqrt(3.0) + (f32::sqrt(3.0) / 2.0 * r as f32)),
                     HEXAGON_SIZE * (r as f32 * 3.0 / 2.0),
                     z as f32 * -1.0 + 0.9,
