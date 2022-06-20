@@ -36,8 +36,8 @@ pub const CHANNEL_CONFIG: &[Channel<Channels>] = &[
         mode: ChannelMode::OrderedReliable(ReliableSettings::default()),
     },
     Channel {
-		index: Channels::GameNotification,
-		direction: ChannelDirection::ServerToClient,
-		mode: ChannelMode::OrderedReliable(ReliableSettings::default()),
-    }
+        index: Channels::GameNotification,
+        direction: ChannelDirection::ServerToClient,
+        mode: ChannelMode::OrderedReliable(ReliableSettings::default()),
+    },
 ];

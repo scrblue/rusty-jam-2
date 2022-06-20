@@ -9,8 +9,8 @@ use naia_bevy_client::{
 };
 
 use crate::{
-    waiting_for_more_connections_menu::resources::WaitingFor, ConnectionInformation, GameState,
-    game::resources::Map,
+    game::resources::Map, waiting_for_more_connections_menu::resources::WaitingFor,
+    ConnectionInformation, GameState,
 };
 use rgj_shared::{
     protocol::{ClientKeepAlive, Identification, Protocol, ProtocolKind},

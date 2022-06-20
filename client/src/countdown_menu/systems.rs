@@ -74,7 +74,7 @@ pub fn insert_component_event(
                         transform,
                     ));
 
-				// Insert the building if there is one
+                // Insert the building if there is one
                 if *map_sync.structure != TileStructure::None {
                     let color: Color = (*map_sync.structure).into();
 

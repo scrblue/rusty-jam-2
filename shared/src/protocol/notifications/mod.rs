@@ -5,6 +5,6 @@ pub mod turn_change;
 
 #[derive_serde]
 pub enum WhoseTurn {
-	Yours,
-	Player(String),
+    Yours,
+    Player(String),
 }

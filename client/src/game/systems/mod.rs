@@ -70,27 +70,7 @@ pub fn game_menu(
 
     if commit_turn {
         for cmd in &turn_tracker.recorded_commands {
-            match cmd {
-                PlayerInputVariant::ClaimTile(ct) => {
-                    // Reset the queued actions' indicators so invalid commands don't stay on screen forever
-                    // TODO: Trait or something for applying and removing predicted commands
-                    if let Some(entity) =
-                        map.coords_to_entity
-                            .get(&(ct.qr.column_q, ct.qr.row_r, ct.layer))
-                    {
-                        if let Ok(mut draw_mode) = query_draw.get_mut(*entity) {
-                            if let Ok(auth_state) = query_auth.get(*entity) {
-                                let color: Color = (*auth_state.tile_type).into();
-
-                                *draw_mode = DrawMode::Outlined {
-                                    fill_mode: FillMode::color(color),
-                                    outline_mode: StrokeMode::new(Color::BLACK, 5.0),
-                                };
-                            }
-                        }
-                    }
-                }
-            }
+            // match cmd {}
         }
 
         client.send_message(

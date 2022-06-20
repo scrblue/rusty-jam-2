@@ -19,10 +19,10 @@ pub struct AxialCoordinates {
 }
 
 impl AxialCoordinates {
-	pub fn new(q: u16, r: u16) -> AxialCoordinates {
-		AxialCoordinates {
-			column_q: q,
-			row_r: r,
-		}
-	}
+    pub fn new(q: u16, r: u16) -> AxialCoordinates {
+        AxialCoordinates {
+            column_q: q,
+            row_r: r,
+        }
+    }
 }

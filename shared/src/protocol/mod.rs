@@ -16,10 +16,7 @@ pub mod countdown;
 pub use countdown::Countdown;
 
 pub mod notifications;
-pub use notifications::{
-	game_start::GameStartNotification,
-	turn_change::TurnChangeNotification,
-};
+pub use notifications::{game_start::GameStartNotification, turn_change::TurnChangeNotification};
 
 pub mod map_sync;
 pub use map_sync::MapSync;
@@ -33,8 +30,8 @@ pub enum Protocol {
     WaitingOnPlayers(WaitingOnPlayers),
     Countdown(Countdown),
 
-	GameStartNotification(GameStartNotification),
-	TurnChangeNotification(TurnChangeNotification),
+    GameStartNotification(GameStartNotification),
+    TurnChangeNotification(TurnChangeNotification),
 
     MapSync(MapSync),
 }

@@ -11,11 +11,5 @@ pub struct PlayerInput {
 
 #[derive_serde]
 pub enum PlayerInputVariant {
-    ClaimTile(ClaimTile),
-}
-
-#[derive_serde]
-pub struct ClaimTile {
-    pub qr: AxialCoordinates,
-    pub layer: u16,
+    SummonBasic,
 }
