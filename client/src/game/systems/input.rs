@@ -54,9 +54,9 @@ pub fn select_entity(
 
     input_mouse_button: Res<Input<MouseButton>>,
     windows: Res<Windows>,
-    egui_context: Res<EguiContext>,
+    mut egui_context: ResMut<EguiContext>,
 ) {
-    if !egui_context.ctx().wants_pointer_input() {
+    if !egui_context.ctx_mut().wants_pointer_input() {
         if input_mouse_button.just_pressed(MouseButton::Left) {
             let window = windows.get_primary().unwrap();
 

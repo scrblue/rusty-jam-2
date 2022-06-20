@@ -23,25 +23,24 @@ pub fn display_info(
 
     mut egui_context: ResMut<EguiContext>,
 ) {
-    let mut error = String::new();
     if let Some(tile) = tile_selected.iter().last() {
-        state.tile = map
-            .coords_to_tile
-            .get(&(tile.0.column_q, tile.0.row_r, 0))
-            .map(|e| map_sync_query.get(*e).map(|s| s.clone()).ok())
-            .flatten();
-
-        state.unit = map
-            .coords_to_unit
-            .get(&(tile.0.column_q, tile.0.row_r, 0))
-            .map(|e| unit_sync_query.get(*e).map(|s| s.clone()).ok())
-            .flatten();
-
         if let Some(entity) = state.moving_unit {
-            error = format!(
+            state.error = format!(
                 "Attempting to move unit to ({}, {}), but feature is unimplemented",
                 tile.0.column_q, tile.0.row_r
             );
+        } else {
+            state.tile = map
+                .coords_to_tile
+                .get(&(tile.0.column_q, tile.0.row_r, 0))
+                .map(|e| map_sync_query.get(*e).map(|s| s.clone()).ok())
+                .flatten();
+
+            state.unit = map
+                .coords_to_unit
+                .get(&(tile.0.column_q, tile.0.row_r, 0))
+                .map(|e| unit_sync_query.get(*e).map(|s| s.clone()).ok())
+                .flatten();
         }
     }
 
@@ -62,8 +61,8 @@ pub fn display_info(
         ) => {
             let mut toggle_move = false;
             egui::Window::new("Unit View").show(egui_context.ctx_mut(), |ui| {
-                if !error.is_empty() {
-                    ui.label(error);
+                if !state.error.is_empty() {
+                    ui.label(&state.error);
                 }
 
                 ui.horizontal(|ui| {
@@ -130,8 +129,8 @@ pub fn display_info(
             None,
         ) => {
             egui::Window::new("Tile View").show(egui_context.ctx_mut(), |ui| {
-                if !error.is_empty() {
-                    ui.label(error);
+                if !state.error.is_empty() {
+                    ui.label(&state.error);
                 }
                 ui.horizontal(|ui| {
                     ui.label("Tile Type:");
@@ -168,6 +167,7 @@ pub fn display_info(
         }
         Change::CancelMoveUnit => {
             state.moving_unit = None;
+            state.error = String::new();
         }
         Change::None => {}
     }
