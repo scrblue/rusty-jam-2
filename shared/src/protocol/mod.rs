@@ -21,6 +21,9 @@ pub use notifications::{game_start::GameStartNotification, turn_change::TurnChan
 pub mod map_sync;
 pub use map_sync::MapSync;
 
+pub mod unit_sync;
+pub use unit_sync::UnitSync;
+
 #[derive(Protocolize)]
 pub enum Protocol {
     Identification(Identification),
@@ -34,4 +37,5 @@ pub enum Protocol {
     TurnChangeNotification(TurnChangeNotification),
 
     MapSync(MapSync),
+    UnitSync(UnitSync),
 }

@@ -16,6 +16,7 @@ lazy_static! {
         name: "Chicken".to_owned(),
         head: HeadStats {
             attack_damage: 5,
+            viewing_distance: 3,
             smarts: 2,
         },
         body: BodyStats {
@@ -40,6 +41,7 @@ lazy_static! {
         name: "Vampire-Bat".to_owned(),
         head: HeadStats {
             attack_damage: 10,
+            viewing_distance: 1,
             smarts: 4,
         },
         body: BodyStats {
@@ -64,6 +66,7 @@ lazy_static! {
         name: "Vulture".to_owned(),
         head: HeadStats {
             attack_damage: 8,
+            viewing_distance: 3,
             smarts: 3,
         },
         body: BodyStats {
@@ -90,6 +93,7 @@ lazy_static! {
         name: "Deer".to_owned(),
         head: HeadStats {
             attack_damage: 8,
+            viewing_distance: 2,
             smarts: 5,
         },
         body: BodyStats {
@@ -113,6 +117,7 @@ lazy_static! {
         name: "Rattlesnake".to_owned(),
         head: HeadStats {
             attack_damage: 15,
+            viewing_distance: 2,
             smarts: 2,
         },
         body: BodyStats {
@@ -133,6 +138,7 @@ lazy_static! {
         name: "Elephants".to_owned(),
         head: HeadStats {
             attack_damage: 12,
+            viewing_distance: 4,
             smarts: 10,
         },
         body: BodyStats {
@@ -158,6 +164,7 @@ lazy_static! {
         name: "Sailfish".to_owned(),
         head: HeadStats  {
             attack_damage: 2,
+            viewing_distance: 4,
             smarts: 2,
         },
         body: BodyStats {
@@ -178,6 +185,7 @@ lazy_static! {
         name: "Electric-Eel".to_owned(),
         head: HeadStats  {
             attack_damage: 24,
+            viewing_distance: 2,
             smarts: 2,
         },
         body: BodyStats {
@@ -198,6 +206,7 @@ lazy_static! {
         name: "Whale".to_owned(),
         head: HeadStats  {
             attack_damage: 12,
+            viewing_distance: 4,
             smarts: 10,
         },
         body: BodyStats {
@@ -262,6 +271,7 @@ pub struct AnimalType {
 #[derive_serde]
 pub struct HeadStats {
     attack_damage: u16,
+    viewing_distance: u16,
     smarts: u16,
 }
 
