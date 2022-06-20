@@ -1,4 +1,4 @@
-use std::process::Termination;
+use std::{ops::Bound, process::Termination};
 
 use lazy_static::lazy_static;
 use naia_shared::{derive_serde, serde};
@@ -9,7 +9,7 @@ use naia_shared::{derive_serde, serde};
 // TODO: Smarts-types for builders
 
 lazy_static! {
-    // Flying-types
+    // Flying-types -- these are generally weaker than other types, but have the advantage of flight
 
     /// Chickens are the speed-oriented flying-type
     pub static ref CHICKEN: AnimalType = AnimalType {
@@ -83,17 +83,135 @@ lazy_static! {
         }
     };
 
-    // Ground-types
+    // Ground-types -- these are the middleground
 
     // Deer are the speed-oriented ground-type
-    // Rattlesnakes are the damage-oriented ground-type
-    // Elephants are the body-oriented ground-type
+    pub static ref DEER: AnimalType = AnimalType {
+        name: "Deer".to_owned(),
+        head: HeadStats {
+            attack_damage: 8,
+            smarts: 5,
+        },
+        body: BodyStats {
+            health: 7,
+            size_penalty: 0.8,
+        },
+        limbs: LimbStats {
+            terrain_a: TerrainMovementStats {
+                terrain_type: TerrainType::Ground,
+                tiles_per_turn: 6,
+            },
+            terrain_b: Some(TerrainMovementStats {
+                terrain_type: TerrainType::Water,
+                tiles_per_turn: 1,
+            })
+        }
+    };
 
-    // Water-types
+    // Rattlesnakes are the damage-oriented ground-type
+    pub static ref RATTLESNAKE: AnimalType = AnimalType {
+        name: "Rattlesnake".to_owned(),
+        head: HeadStats {
+            attack_damage: 15,
+            smarts: 2,
+        },
+        body: BodyStats {
+            health: 5,
+            size_penalty: 0.8,
+        },
+        limbs: LimbStats {
+            terrain_a: TerrainMovementStats {
+                terrain_type: TerrainType::Ground,
+                tiles_per_turn: 3,
+            },
+            terrain_b: None,
+        }
+    };
+
+    // Elephants are the body-oriented ground-type
+    pub static ref ELEPHANT: AnimalType = AnimalType {
+        name: "Elephants".to_owned(),
+        head: HeadStats {
+            attack_damage: 12,
+            smarts: 10,
+        },
+        body: BodyStats {
+            health: 18,
+            size_penalty: 3.0,
+        },
+        limbs: LimbStats {
+            terrain_a: TerrainMovementStats {
+                terrain_type: TerrainType::Ground,
+                tiles_per_turn: 6,
+            },
+            terrain_b: Some(TerrainMovementStats {
+                terrain_type: TerrainType::Water,
+                tiles_per_turn: 3,
+            })
+        }
+    };
+
+    // Water-types -- these are extremes, but have the disadvantage of only moving in water
 
     // Sailfish are the speed-oriented water-type
+    pub static ref SAILFISH: AnimalType = AnimalType {
+        name: "Sailfish".to_owned(),
+        head: HeadStats  {
+            attack_damage: 2,
+            smarts: 2,
+        },
+        body: BodyStats {
+            health: 4,
+            size_penalty: 0.5,
+        },
+        limbs: LimbStats {
+            terrain_a: TerrainMovementStats {
+                terrain_type: TerrainType::Water,
+                tiles_per_turn: 6,
+            },
+            terrain_b: None,
+        }
+    };
+
     // Electric eels are the damage-oriented water-type
+    pub static ref ELECTRIC_EEL: AnimalType = AnimalType {
+        name: "Electric-Eel".to_owned(),
+        head: HeadStats  {
+            attack_damage: 24,
+            smarts: 2,
+        },
+        body: BodyStats {
+            health: 2,
+            size_penalty: 0.25,
+        },
+        limbs: LimbStats {
+            terrain_a: TerrainMovementStats {
+                terrain_type: TerrainType::Water,
+                tiles_per_turn: 1,
+            },
+            terrain_b: None,
+        }
+    };
+
     // Whales are the body-oriented water-type
+    pub static ref WHALE: AnimalType = AnimalType {
+        name: "Whale".to_owned(),
+        head: HeadStats  {
+            attack_damage: 12,
+            smarts: 10,
+        },
+        body: BodyStats {
+            health: 24,
+            size_penalty: 5.0,
+        },
+        limbs: LimbStats {
+            terrain_a: TerrainMovementStats {
+                terrain_type: TerrainType::Water,
+                tiles_per_turn: 10,
+            },
+            terrain_b: None,
+        }
+    };
 }
 
 #[derive_serde]
