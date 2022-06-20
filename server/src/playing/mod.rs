@@ -127,8 +127,10 @@ pub fn tick(
                                     *subj_tile.tile_type = *auth_tile.tile_type.clone();
                                     *subj_tile.structure = *auth_tile.structure.clone();
                                 } else {
-                                    *subj_tile.tile_type = TileType::Fog;
-                                    *subj_tile.structure = TileStructure::None;
+                                    if *subj_tile.tile_type != TileType::Fog {
+                                        *subj_tile.tile_type = TileType::Fog;
+                                        *subj_tile.structure = TileStructure::None;
+                                    }
                                 }
                             }
                         }
