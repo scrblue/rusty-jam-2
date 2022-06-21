@@ -13,8 +13,7 @@ pub struct TileSelectedState {
     pub error: String,
     pub moving_unit: Option<Entity>,
 
-    pub tile: Option<MapSync>,
-    pub unit: Option<UnitSync>,
+    pub tile: Option<AxialCoordinates>,
 }
 
 pub struct TurnTracker {

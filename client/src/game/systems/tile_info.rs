@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContext};
-use bevy_prototype_lyon::prelude::tess::geom::euclid::num::Round;
-use naia_bevy_client::{shared::EntityHandleConverter, Client};
+use naia_bevy_client::{events::UpdateComponentEvent, Client};
 
 use rgj_shared::{
     behavior::AxialCoordinates,
@@ -9,7 +8,7 @@ use rgj_shared::{
     protocol::{
         map_sync::{MapSync, TileStructure, TileType},
         player_input::PlayerInputVariant,
-        PlayerInput, Protocol, UnitSync,
+        PlayerInput, Protocol, ProtocolKind, UnitSync,
     },
     Channels,
 };
@@ -21,6 +20,7 @@ pub fn display_info(
     mut client: Client<Protocol, Channels>,
 
     mut tile_selected: EventReader<TileSelectedEvent>,
+    mut player_moves: EventReader<UpdateComponentEvent<ProtocolKind>>,
 
     map_sync_query: Query<&MapSync>,
     unit_sync_query: Query<&UnitSync>,
@@ -31,7 +31,24 @@ pub fn display_info(
 
     mut egui_context: ResMut<EguiContext>,
 ) {
+    // If a unit moves
+    for player_move in player_moves.iter() {
+        if let UpdateComponentEvent(_tick, entity, ProtocolKind::UnitSync) = player_move {
+            // And the entity equals to the moving unit
+            if let Some(tracked_entity) = state.moving_unit {
+                if tracked_entity == *entity {
+                    // Then update the tracked  tile to the new position of the unit
+                    if let Ok(unit_sync) = unit_sync_query.get(*entity) {
+                        state.tile = Some(*unit_sync.position);
+                    }
+                }
+            }
+        }
+    }
+
+    // If a new tile is selected
     if let Some(tile) = tile_selected.iter().last() {
+        // Then move the set moving unit to that tile if there is one
         if let Some(entity) = state.moving_unit {
             if let Ok(unit_sync) = unit_sync_query.get(entity) {
                 let entity_pos = *unit_sync.position;
@@ -164,22 +181,34 @@ pub fn display_info(
             } else {
                 state.error = "Fatal internal error in UnitSync-less unit".to_owned();
             }
-        } else {
-            state.tile = map
-                .coords_to_tile
-                .get(&(tile.0.column_q, tile.0.row_r, 0))
-                .map(|e| map_sync_query.get(*e).map(|s| s.clone()).ok())
-                .flatten();
-
-            state.unit = map
-                .coords_to_unit
-                .get(&(tile.0.column_q, tile.0.row_r, 0))
-                .map(|e| unit_sync_query.get(*e).map(|s| s.clone()).ok())
-                .flatten();
+        }
+        // If a unit isn't being tracked, then update the tracked tile
+        else {
+            state.tile = Some(tile.0);
         }
     }
 
-    let change = match (&state.tile, &state.unit) {
+    let tile = state
+        .tile
+        .map(|tile| {
+            map.coords_to_tile
+                .get(&(tile.column_q, tile.row_r, 0))
+                .map(|e| map_sync_query.get(*e).map(|s| s.clone()).ok())
+                .flatten()
+        })
+        .flatten();
+
+    let unit = state
+        .tile
+        .map(|tile| {
+            map.coords_to_unit
+                .get(&(tile.column_q, tile.row_r, 0))
+                .map(|e| unit_sync_query.get(*e).map(|s| s.clone()).ok())
+                .flatten()
+        })
+        .flatten();
+
+    let change = match (tile, unit) {
         (
             Some(MapSync {
                 position,
@@ -209,14 +238,14 @@ pub fn display_info(
                     ui.label("Health:");
                     ui.label(format!(
                         "{} of {}",
-                        **current_health,
+                        *current_health,
                         hybrid_type.body().health
                     ));
                 });
 
                 ui.horizontal(|ui| {
                     ui.label("Remaining Stamina:");
-                    ui.label(format!("{}", **stamina_remaining));
+                    ui.label(format!("{}", *stamina_remaining));
                 });
 
                 ui.horizontal(|ui| {
@@ -224,7 +253,7 @@ pub fn display_info(
                     ui.label((*tile_type).to_string());
                 });
 
-                match **structure {
+                match *structure {
                     TileStructure::None => {}
                     TileStructure::City => {
                         ui.label("Guarding a city");
@@ -234,6 +263,7 @@ pub fn display_info(
                     }
                 }
 
+                // TODO: Only display this button if the unit belongs to this player
                 if state.moving_unit.is_none() {
                     if ui.button("Move").clicked() {
                         toggle_move = true;
@@ -247,7 +277,7 @@ pub fn display_info(
 
             if toggle_move {
                 if state.moving_unit.is_none() {
-                    Change::MoveUnit(**position, **layer)
+                    Change::MoveUnit(*position, *layer)
                 } else {
                     Change::CancelMoveUnit
                 }
@@ -272,7 +302,7 @@ pub fn display_info(
                     ui.label((*tile_type).to_string());
                 });
 
-                match **structure {
+                match *structure {
                     TileStructure::None => {}
                     TileStructure::City => {
                         ui.label("With a city");
@@ -294,9 +324,12 @@ pub fn display_info(
 
     match change {
         Change::MoveUnit(coord, layer) => {
-			if let Some(unit) = map.coords_to_unit.get(&(coord.column_q, coord.row_r, layer)) {
-				state.moving_unit = Some(*unit);
-			}
+            if let Some(unit) = map
+                .coords_to_unit
+                .get(&(coord.column_q, coord.row_r, layer))
+            {
+                state.moving_unit = Some(*unit);
+            }
         }
         Change::CancelMoveUnit => {
             state.moving_unit = None;
