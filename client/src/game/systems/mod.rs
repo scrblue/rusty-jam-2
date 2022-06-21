@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContext};
-use bevy_prototype_lyon::prelude::*;
 use naia_bevy_client::{
     events::{MessageEvent, UpdateComponentEvent},
     Client,
@@ -9,7 +8,7 @@ use naia_bevy_client::{
 use rgj_shared::{
     behavior::HEXAGON_SIZE,
     protocol::{
-        map_sync::{MapSync, TileType},
+        map_sync::{MapSync, TileStructure, TileType},
         notifications::WhoseTurn,
         player_input::PlayerInputVariant,
         PlayerInput, Protocol, ProtocolKind, UnitSync,
@@ -19,16 +18,22 @@ use rgj_shared::{
 
 use crate::TileSprites;
 
-use super::resources::{Map, TurnTracker};
+use super::{
+    components::TileWithBuilding,
+    resources::{Map, TurnTracker},
+};
 
 pub mod input;
 pub mod tile_info;
 
 pub fn update_map_component_event(
+    mut commands: Commands,
+
     mut event_reader: EventReader<UpdateComponentEvent<ProtocolKind>>,
 
     query_auth: Query<&MapSync>,
-    mut query_local: Query<&mut Handle<Image>>,
+    query_translate: Query<&Transform>,
+    mut query_handle: Query<&mut Handle<Image>>,
 
     assets: Res<TileSprites>,
 ) {
@@ -36,7 +41,7 @@ pub fn update_map_component_event(
         if let UpdateComponentEvent(_tick, entity, ProtocolKind::MapSync) = event {
             if let Ok(map_sync) = query_auth.get(*entity) {
                 error!("In here");
-                let mut handle = query_local.get_mut(*entity).unwrap();
+                let mut handle = query_handle.get_mut(*entity).unwrap();
                 let texture = match *map_sync.tile_type {
                     // FIXME: Fog should be fog
                     TileType::Fog => &assets.forest,
@@ -56,6 +61,35 @@ pub fn update_map_component_event(
                 };
 
                 *handle = texture.clone();
+
+                if *map_sync.structure != TileStructure::None {
+                    if let Ok(transform) = query_translate.get(*entity) {
+                        let mut transform = transform.clone();
+
+                        let color: Color = (*map_sync.structure).into();
+                        transform.translation.z += 0.1;
+
+                        let structure_entity = commands
+                            .spawn_bundle(SpriteBundle {
+                                sprite: Sprite {
+                                    color,
+                                    custom_size: Some(Vec2::new(65.0, 65.0)),
+                                    ..Default::default()
+                                },
+                                transform: transform,
+                                ..Default::default()
+                            })
+                            .id();
+
+                        commands
+                            .entity(*entity)
+                            .insert(TileWithBuilding { structure_entity });
+                    }
+                }
+				// Clean up if the entity has a TileWithBuilding
+                else {
+                    // TODO
+                }
             }
         }
     }
