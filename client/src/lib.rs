@@ -26,6 +26,7 @@ pub struct TileSprites {
     pub beach: Handle<Image>,
     pub clear_sky: Handle<Image>,
     pub desert: Handle<Image>,
+    pub fog: Handle<Image>,
     pub forest: Handle<Image>,
     pub grass: Handle<Image>,
     pub island: Handle<Image>,

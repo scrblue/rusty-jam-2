@@ -80,8 +80,7 @@ pub fn update_map_component_event(
             if let Ok(map_sync) = query_auth.get(*entity) {
                 let mut handle = query_handle.get_mut(*entity).unwrap();
                 let texture = match *map_sync.tile_type {
-                    // FIXME: Fog should be fog
-                    TileType::Fog => &assets.forest,
+                    TileType::Fog => &assets.fog,
 
                     TileType::Grass => &assets.grass,
                     TileType::Forest => &assets.forest,

@@ -95,8 +95,7 @@ pub fn insert_map_sync_event(
                 );
 
                 let texture = match *map_sync.tile_type {
-                    // FIXME: Fog should be fog
-                    TileType::Fog => &assets.forest,
+                    TileType::Fog => &assets.fog,
 
                     TileType::Grass => &assets.grass,
                     TileType::Forest => &assets.forest,

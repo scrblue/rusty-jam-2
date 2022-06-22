@@ -39,6 +39,7 @@ pub fn init(
     let beach = assets.load("tiles/BeachHex.png");
     let clear_sky = assets.load("tiles/ClearSkyHex.png");
     let desert = assets.load("tiles/DesertHex.png");
+    let fog = assets.load("tiles/FogHex.png");
     let forest = assets.load("tiles/ForestHex.png");
     let grass = assets.load("tiles/GrassHex.png");
     let island = assets.load("tiles/IslandHex.png");
@@ -51,6 +52,7 @@ pub fn init(
         beach,
         clear_sky,
         desert,
+        fog,
         forest,
         grass,
         island,
