@@ -219,7 +219,7 @@ pub fn tick(mut commands: Commands, mut server: Server<Protocol, Channels>, args
         commands.insert_resource(NextState(GameState::Countdown));
 
         // Insert resources needed for next state
-        commands.insert_resource(Countdown(10));
+        commands.insert_resource(Countdown(3));
         commands.insert_resource(TimeSinceLastCount(Duration::from_secs(0)));
     }
 
