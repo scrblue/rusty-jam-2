@@ -1,5 +1,7 @@
 use std::str::Split;
 
+use leafwing_input_manager::prelude::*;
+
 use bevy::{
     input::mouse::{MouseMotion, MouseWheel},
     prelude::*,
@@ -12,30 +14,51 @@ use rgj_shared::{
     protocol::{player_input::PlayerInputVariant, MapSync},
 };
 
+use super::Player;
+
 use crate::game::resources::{Map, TileSelectedEvent, TurnTracker};
 
-pub fn camera_system(
+// This is the list of "things in the game I want to be able to do based on input"
+#[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug)]
+pub enum Action {
+    Pan,
+    Select,
+    Zoom,
+}
+
+pub fn pan_camera_system(
     mut ev_motion: EventReader<MouseMotion>,
-    mut ev_scroll: EventReader<MouseWheel>,
-
     mut camera_query: Query<(&mut OrthographicProjection, &mut GlobalTransform)>,
-
-    input_mouse_button: Res<Input<MouseButton>>,
+    query: Query<&ActionState<Action>, With<Player>>,
 ) {
     let mut pan = Vec2::ZERO;
-    let mut scroll = 0.0;
+    let action_state = query.single();
 
-    if input_mouse_button.pressed(MouseButton::Middle) {
+    if action_state.pressed(Action::Pan) {
         for event in ev_motion.iter() {
             pan += event.delta;
         }
     }
 
+    let (camera_proj, mut camera_trans) = camera_query.get_single_mut().unwrap();
+    camera_trans.translation.x -= pan.x * camera_proj.scale;
+    camera_trans.translation.y += pan.y * camera_proj.scale;
+}
+
+pub fn zoom_camera_system(
+    mut ev_scroll: EventReader<MouseWheel>,
+    mut camera_query: Query<(&mut OrthographicProjection, &mut GlobalTransform)>,
+    query: Query<&ActionState<Action>, With<Player>>,
+) {
+    let action_state = query.single();
+
+    let mut scroll = 0.0;
+
     for event in ev_scroll.iter() {
         scroll += event.y;
     }
 
-    let (mut camera_proj, mut camera_trans) = camera_query.get_single_mut().unwrap();
+    let (mut camera_proj, _) = camera_query.get_single_mut().unwrap();
 
     if camera_proj.scale > 0.0 {
         camera_proj.scale -= scroll * 0.01;
@@ -43,8 +66,6 @@ pub fn camera_system(
             camera_proj.scale = 0.1;
         }
     }
-    camera_trans.translation.x -= pan.x * camera_proj.scale;
-    camera_trans.translation.y += pan.y * camera_proj.scale;
 }
 
 pub fn select_entity(

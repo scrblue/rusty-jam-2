@@ -16,7 +16,6 @@ use rgj_client::{
     connect_menu,
     countdown_menu::systems as countdown_systems,
     game::{resources::TileSelectedEvent, systems as game_systems},
-    input::Action,
     waiting_for_more_connections_menu::systems as waiting_systems,
     GameState,
 };
@@ -34,20 +33,20 @@ fn main() {
         .add_event::<TileSelectedEvent>()
         .add_plugins(DefaultPlugins)
         .add_plugin(EguiPlugin)
-       // .insert_resource(WorldInspectorParams {
-       //     despawnable_entities: true,
-       //     highlight_changes: true,
-       //     ..Default::default()
-       // })
-       // .add_plugin(WorldInspectorPlugin::new())
-       // .add_plugin(InspectorPlugin::<Resources>::new())
-       // // registers the type in the `bevy_reflect` machinery,
-       // // so that even without implementing `Inspectable` we can display the struct fields
-       // .register_type::<OrthographicProjection>()
-       // // This plugin maps inputs to an input-type agnostic action-state
-       // // We need to provide it with an enum which stores the possible actions a player could take
-       // .add_plugin(InputManagerPlugin::<Action>::default())
-       // XXX The InputMap and ActionState components will be added to any entity with the Player component
+        // .insert_resource(WorldInspectorParams {
+        //     despawnable_entities: true,
+        //     highlight_changes: true,
+        //     ..Default::default()
+        // })
+        // .add_plugin(WorldInspectorPlugin::new())
+        // .add_plugin(InspectorPlugin::<Resources>::new())
+        // // registers the type in the `bevy_reflect` machinery,
+        // // so that even without implementing `Inspectable` we can display the struct fields
+        // .register_type::<OrthographicProjection>()
+        // This plugin maps inputs to an input-type agnostic action-state
+        // We need to provide it with an enum which stores the possible actions a player could take
+        .add_plugin(InputManagerPlugin::<game_systems::input::Action>::default())
+        // XXX The InputMap and ActionState components will be added to any entity with the Player component
         .add_plugin(ClientPlugin::<Protocol, Channels>::new(
             ClientConfig::default(),
             shared_config(),
@@ -151,7 +150,8 @@ fn main() {
             ConditionSet::new()
                 .run_in_state(GameState::Game)
                 .with_system(game_systems::game_menu)
-                .with_system(game_systems::input::camera_system)
+                .with_system(game_systems::input::pan_camera_system)
+                .with_system(game_systems::input::zoom_camera_system)
                 .with_system(game_systems::input::select_entity)
                 .with_system(game_systems::tile_info::display_info)
                 .into(),

@@ -1,3 +1,4 @@
 Cargo.lock
 target/
-client/dist/
+client/build
+client/dist

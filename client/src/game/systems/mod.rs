@@ -1,5 +1,8 @@
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContext};
+
+use leafwing_input_manager::prelude::*;
+
 use naia_bevy_client::{
     events::{InsertComponentEvent, MessageEvent, UpdateComponentEvent},
     Client,
@@ -62,6 +65,21 @@ pub fn insert_unit_sync_event(
             }
         }
     }
+}
+
+#[derive(Component)]
+pub struct Player;
+
+fn spawn_player(mut commands: Commands) {
+    commands
+        .spawn()
+        .insert(Player)
+        .insert_bundle(InputManagerBundle::<input::Action> {
+            // Stores "which actions are currently pressed"
+            action_state: ActionState::default(),
+            // Describes how to convert from player inputs into those actions
+            input_map: InputMap::new([(input::Action::Select, MouseButton::Left)]),
+        });
 }
 
 pub fn update_map_component_event(
