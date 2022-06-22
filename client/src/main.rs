@@ -124,6 +124,7 @@ fn main() {
                 .run_in_state(GameState::Game)
                 .with_system(game_systems::update_map_component_event)
                 .with_system(game_systems::update_unit_component_event)
+                .with_system(game_systems::insert_unit_sync_event)
                 .with_system(game_systems::receive_turn_change_notification)
                 .into(),
         )

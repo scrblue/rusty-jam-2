@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContext};
 use naia_bevy_client::{
-    events::{MessageEvent, UpdateComponentEvent},
+    events::{InsertComponentEvent, MessageEvent, UpdateComponentEvent},
     Client,
 };
 
@@ -26,6 +26,44 @@ use super::{
 pub mod input;
 pub mod tile_info;
 
+// TODO: Extract and don't copy paste from version in countdown
+pub fn insert_unit_sync_event(
+    mut event_reader: EventReader<InsertComponentEvent<ProtocolKind>>,
+    mut commands: Commands,
+
+    query: Query<&UnitSync>,
+
+    mut map: ResMut<Map>,
+) {
+    for event in event_reader.iter() {
+        if let InsertComponentEvent(entity, ProtocolKind::UnitSync) = event {
+            if let Ok(unit_sync) = query.get(*entity) {
+                let q = unit_sync.position.column_q;
+                let r = unit_sync.position.row_r;
+                let z = *unit_sync.layer;
+
+                let transform = Transform::from_xyz(
+                    HEXAGON_SIZE * (q as f32 * f32::sqrt(3.0) + (f32::sqrt(3.0) / 2.0 * r as f32)),
+                    HEXAGON_SIZE * (r as f32 * 3.0 / 2.0),
+                    z as f32 * -1.0 + 0.9,
+                );
+
+                commands.entity(*entity).insert_bundle(SpriteBundle {
+                    sprite: Sprite {
+                        custom_size: Some(Vec2::new(32.0, 32.0)),
+                        color: Color::ORANGE,
+                        ..Default::default()
+                    },
+                    transform,
+                    ..Default::default()
+                });
+
+                map.coords_to_unit.insert((q, r, z), *entity);
+            }
+        }
+    }
+}
+
 pub fn update_map_component_event(
     mut commands: Commands,
 
@@ -34,13 +72,12 @@ pub fn update_map_component_event(
     query_auth: Query<&MapSync>,
     query_translate: Query<&Transform>,
     mut query_handle: Query<&mut Handle<Image>>,
-
+    // mut query_w_building: Query<&mut TileWithBuilding>,
     assets: Res<TileSprites>,
 ) {
     for event in event_reader.iter() {
         if let UpdateComponentEvent(_tick, entity, ProtocolKind::MapSync) = event {
             if let Ok(map_sync) = query_auth.get(*entity) {
-                error!("In here");
                 let mut handle = query_handle.get_mut(*entity).unwrap();
                 let texture = match *map_sync.tile_type {
                     // FIXME: Fog should be fog
@@ -81,14 +118,20 @@ pub fn update_map_component_event(
                             })
                             .id();
 
-                        commands
-                            .entity(*entity)
-                            .insert(TileWithBuilding { structure_entity });
+                        commands.entity(*entity).insert(TileWithBuilding {
+                            structure_entity: structure_entity,
+                        });
                     }
                 }
-				// Clean up if the entity has a TileWithBuilding
+                // Clean up if the entity has a TileWithBuilding
                 else {
-                    // TODO
+                    // TODO: Not sure why this doesn't work, but it doesn't, so it's a TODO
+                    // if let Ok(twb) = query_w_building.get_mut(*entity) {
+                    //     let struct_entity = twb.structure_entity;
+
+                    //     commands.entity(struct_entity).despawn();
+                    //     commands.entity(*entity).remove::<TileWithBuilding>();
+                    // }
                 }
             }
         }
