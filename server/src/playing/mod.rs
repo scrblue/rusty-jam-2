@@ -94,10 +94,10 @@ pub fn tick(
 
                                     if q >= 0
                                         && r >= 0
-                                        && q <= u16::MAX.into()
-                                        && r <= u16::MAX.into()
+                                        && q <= i32::MAX.into()
+                                        && r <= i32::MAX.into()
                                     {
-                                        valid_qrs.push(AxialCoordinates::new(q as u16, r as u16));
+                                        valid_qrs.push(AxialCoordinates::new(q as i32, r as i32));
                                     }
                                 }
                             }
@@ -110,9 +110,9 @@ pub fn tick(
                         .unwrap()
                         .children;
 
-                    for z in 0..MAP_HEIGHT {
-                        for r in 0..map_config.size_height {
-                            for q in 0..map_config.size_width {
+                    for z in 0..MAP_HEIGHT as i32 {
+                        for r in 0..map_config.size_height as i32 {
+                            for q in 0..map_config.size_width as i32 {
                                 let qr = AxialCoordinates::new(q, r);
 
                                 let [mut subj_tile, auth_tile] = query_tile

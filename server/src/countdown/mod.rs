@@ -50,8 +50,8 @@ pub fn init(
     let user_count = server.users_count();
     let mut starting_positions = Vec::with_capacity(user_count);
     for i in 0..user_count {
-        let q = Random::gen_range_u32(0, map_config.size_width.into()) as u16;
-        let r = Random::gen_range_u32(0, map_config.size_height.into()) as u16;
+        let q = Random::gen_range_u32(0, map_config.size_width.into()) as i32;
+        let r = Random::gen_range_u32(0, map_config.size_height.into()) as i32;
 
         starting_positions.push(AxialCoordinates::new(q, r));
     }
@@ -86,15 +86,15 @@ pub fn init(
                 let q = starting_positions[index].column_q as i32 + q_offset;
                 let r = starting_positions[index].row_r as i32 + r_offset;
 
-                if q >= 0 && r >= 0 && q <= u16::MAX.into() && r <= u16::MAX.into() {
-                    valid_qrs.push(AxialCoordinates::new(q as u16, r as u16));
+                if q >= 0 && r >= 0 && q <= i32::MAX.into() && r <= i32::MAX.into() {
+                    valid_qrs.push(AxialCoordinates::new(q as i32, r as i32));
                 }
             }
         }
 
-        for z in 0..MAP_HEIGHT {
-            for r in 0..map_config.size_height {
-                for q in 0..map_config.size_width {
+        for z in 0..MAP_HEIGHT as i32 {
+            for r in 0..map_config.size_height as i32 {
+                for q in 0..map_config.size_width as i32 {
                     let qr = AxialCoordinates::new(q, r);
 
                     // If the tile is in view of the initial deer entity, send the authoritative

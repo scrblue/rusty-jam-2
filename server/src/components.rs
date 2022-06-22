@@ -11,7 +11,7 @@ pub struct TileMap {
 impl TileMap {
     /// Utility function for turning xyz coordinates into the index of the 1d [`Vec`] used to
     /// represent the map
-    pub fn tile_qrz_to_index(map_conf: &MapConfig, q: u16, r: u16, z: u16) -> usize {
+    pub fn tile_qrz_to_index(map_conf: &MapConfig, q: i32, r: i32, z: i32) -> usize {
         (z as usize * map_conf.size_width as usize * map_conf.size_height as usize)
             + (r as usize * map_conf.size_width as usize)
             + q as usize
@@ -19,15 +19,15 @@ impl TileMap {
 
     /// Utility function for turning an index of the 1d [`Vec`] used to represent the map into xyz
     /// coordinates
-    pub fn index_to_tile_qrz(map_conf: &MapConfig, index: usize) -> (u16, u16, u16) {
-        let mut index = index as u16;
+    pub fn index_to_tile_qrz(map_conf: &MapConfig, index: usize) -> (i32, i32, i32) {
+        let mut index = index as i32;
 
-        let z = index / (map_conf.size_width * map_conf.size_height);
+        let z = index / (map_conf.size_width * map_conf.size_height) as i32;
 
-        index -= z * map_conf.size_width * map_conf.size_height;
+        index -= z * (map_conf.size_width * map_conf.size_height) as i32;
 
-        let r = index / map_conf.size_width;
-        let q = index % map_conf.size_width;
+        let r = index / map_conf.size_width as i32;
+        let q = index % map_conf.size_width as i32;
 
         (q, r, z)
     }

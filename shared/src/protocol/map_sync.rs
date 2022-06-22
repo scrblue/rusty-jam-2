@@ -7,7 +7,7 @@ use thiserror::Error;
 use crate::{behavior::AxialCoordinates, resources::MapConfig};
 
 /// Represents the two layers, ground and air levels
-pub const MAP_HEIGHT: u16 = 2;
+pub const MAP_HEIGHT: i32 = 2;
 
 #[derive(Copy, Debug)]
 #[derive_serde]
@@ -180,15 +180,15 @@ pub fn tile_qrz_to_index(map_conf: &MapConfig, q: i32, r: i32, z: i32) -> usize 
         + q as usize
 }
 
-pub fn index_to_tile_qrz(map_conf: &MapConfig, index: usize) -> (u16, u16, u16) {
-    let mut index = index as u16;
+pub fn index_to_tile_qrz(map_conf: &MapConfig, index: usize) -> (i32, i32, i32) {
+    let mut index = index as i32;
 
-    let z = index / (map_conf.size_width * map_conf.size_height);
+    let z = index / (map_conf.size_width * map_conf.size_height) as i32;
 
-    index -= z * map_conf.size_width * map_conf.size_height;
+    index -= z * (map_conf.size_width * map_conf.size_height) as i32;
 
-    let r = index / map_conf.size_width;
-    let q = index % map_conf.size_width;
+    let r = index / map_conf.size_width as i32;
+    let q = index % map_conf.size_width as i32;
 
     (q, r, z)
 }
@@ -198,7 +198,7 @@ pub fn index_to_tile_qrz(map_conf: &MapConfig, index: usize) -> (u16, u16, u16) 
 /// The synchronization of a tile on the map
 pub struct MapSync {
     pub position: Property<AxialCoordinates>,
-    pub layer: Property<u16>,
+    pub layer: Property<i32>,
     pub tile_type: Property<TileType>,
     pub structure: Property<TileStructure>,
 }

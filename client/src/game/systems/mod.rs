@@ -135,13 +135,13 @@ pub fn update_unit_component_event(
                     q = q.round();
                     r = r.round();
 
-                    if q >= 0.0 && r >= 0.0 && q <= u16::MAX as f32 && r <= u16::MAX as f32 {
-                        let q = q as u16;
-                        let r = r as u16;
+                    if q >= 0.0 && r >= 0.0 && q <= i32::MAX as f32 && r <= i32::MAX as f32 {
+                        let q = q as i32;
+                        let r = r as i32;
 
                         (q, r)
                     } else {
-                        panic!("Could not fit in u16");
+                        panic!("Could not fit in i32");
                     }
                 };
 
