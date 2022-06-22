@@ -21,18 +21,15 @@ use crate::game::resources::{Map, TileSelectedEvent, TurnTracker};
 // This is the list of "things in the game I want to be able to do based on input"
 #[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug)]
 pub enum Action {
-    Mod1,
     Pan,
     Select,
     Zoom,
 }
 pub fn default_input_map() -> InputMap<Action> {
     let mut input_map = InputMap::default();
-    //    input_map.insert([(input::Action::Select, KeyCode::P)]);
     input_map.insert(Action::Select, MouseButton::Left);
-    //input_map.insert_chord(input::Action::Pan, [KeyCode::LShift, KeyCode::P]);
-    input_map.insert(Action::Mod1, KeyCode::LShift);
-    input_map.insert(Action::Pan, MouseButton::Left);
+    input_map.insert(Action::Pan, MouseButton::Middle);
+    input_map.insert(Action::Pan, KeyCode::LShift);
     input_map
 }
 
@@ -44,7 +41,7 @@ pub fn pan_camera_system(
     let mut pan = Vec2::ZERO;
     let action_state = action_query.single();
 
-    if action_state.pressed(Action::Pan) && action_state.pressed(Action::Mod1) {
+    if action_state.pressed(Action::Pan) {
         for event in ev_motion.iter() {
             pan += event.delta;
         }
@@ -84,7 +81,7 @@ pub fn select_entity(
 ) {
     if !egui_context.ctx_mut().wants_pointer_input() {
         let action_state = action_query.single();
-        if action_state.pressed(Action::Select) && !action_state.pressed(Action::Mod1) {
+        if action_state.pressed(Action::Select) {
             let window = windows.get_primary().unwrap();
 
             if let Some(position) = window.cursor_position() {
