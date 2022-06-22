@@ -14,12 +14,12 @@ lazy_static! {
 #[derive(Copy, Debug, Eq, Hash)]
 #[derive_serde]
 pub struct AxialCoordinates {
-    pub column_q: u16,
-    pub row_r: u16,
+    pub column_q: i32,
+    pub row_r: i32,
 }
 
 impl AxialCoordinates {
-    pub fn new(q: u16, r: u16) -> AxialCoordinates {
+    pub fn new(q: i32, r: i32) -> AxialCoordinates {
         AxialCoordinates {
             column_q: q,
             row_r: r,

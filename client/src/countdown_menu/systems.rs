@@ -48,7 +48,7 @@ pub fn insert_unit_sync_event(
             if let Ok(unit_sync) = query.get(*entity) {
                 let q = unit_sync.position.column_q;
                 let r = unit_sync.position.row_r;
-                let z = *unit_sync.layer;
+                let z = *unit_sync.layer as i32;
 
                 let transform = Transform::from_xyz(
                     HEXAGON_SIZE * (q as f32 * f32::sqrt(3.0) + (f32::sqrt(3.0) / 2.0 * r as f32)),
