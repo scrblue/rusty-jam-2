@@ -70,11 +70,6 @@ pub fn insert_unit_sync_event(
 pub struct Player;
 
 pub fn spawn_player(mut commands: Commands) {
-    let mut input_map = InputMap::default();
-    //    input_map.insert([(input::Action::Select, KeyCode::P)]);
-    input_map.insert(input::Action::Select, MouseButton::Left);
-    input_map.insert_chord(input::Action::Pan, [KeyCode::LShift, KeyCode::P]);
-
     commands
         .spawn()
         .insert(Player)
@@ -82,7 +77,7 @@ pub fn spawn_player(mut commands: Commands) {
             // Stores "which actions are currently pressed"
             action_state: ActionState::default(),
             // Describes how to convert from player inputs into those actions
-            input_map,
+            input_map: input::default_input_map(),
         });
 }
 
