@@ -29,10 +29,10 @@ pub enum Action {
 pub fn pan_camera_system(
     mut ev_motion: EventReader<MouseMotion>,
     mut camera_query: Query<(&mut OrthographicProjection, &mut GlobalTransform)>,
-    query: Query<&ActionState<Action>, With<Player>>,
+    action_query: Query<&ActionState<Action>, With<Player>>,
 ) {
     let mut pan = Vec2::ZERO;
-    let action_state = query.single();
+    let action_state = action_query.single();
 
     if action_state.pressed(Action::Pan) {
         for event in ev_motion.iter() {
@@ -48,10 +48,7 @@ pub fn pan_camera_system(
 pub fn zoom_camera_system(
     mut ev_scroll: EventReader<MouseWheel>,
     mut camera_query: Query<(&mut OrthographicProjection, &mut GlobalTransform)>,
-    query: Query<&ActionState<Action>, With<Player>>,
 ) {
-    let action_state = query.single();
-
     let mut scroll = 0.0;
 
     for event in ev_scroll.iter() {
@@ -70,15 +67,14 @@ pub fn zoom_camera_system(
 
 pub fn select_entity(
     mut entity_selected: EventWriter<TileSelectedEvent>,
-
+    action_query: Query<&ActionState<Action>, With<Player>>,
     camera_transform_query: Query<(&GlobalTransform, &OrthographicProjection)>,
-
-    input_mouse_button: Res<Input<MouseButton>>,
     windows: Res<Windows>,
     mut egui_context: ResMut<EguiContext>,
 ) {
     if !egui_context.ctx_mut().wants_pointer_input() {
-        if input_mouse_button.just_pressed(MouseButton::Right) {
+        let action_state = action_query.single();
+        if action_state.pressed(Action::Select) {
             let window = windows.get_primary().unwrap();
 
             if let Some(position) = window.cursor_position() {

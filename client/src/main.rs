@@ -155,5 +155,6 @@ fn main() {
                 .with_system(game_systems::tile_info::display_info)
                 .into(),
         )
+        .add_enter_system(GameState::Game, game_systems::spawn_player)
         .run();
 }

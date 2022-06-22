@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContext};
-
 use leafwing_input_manager::prelude::*;
 
 use naia_bevy_client::{
@@ -32,7 +31,12 @@ pub mod tile_info;
 #[derive(Component)]
 pub struct Player;
 
-fn spawn_player(mut commands: Commands) {
+pub fn spawn_player(mut commands: Commands) {
+    let mut input_map = InputMap::default();
+    //    input_map.insert([(input::Action::Select, KeyCode::P)]);
+    input_map.insert(input::Action::Select, MouseButton::Left);
+    input_map.insert_chord(input::Action::Pan, [KeyCode::LShift, KeyCode::P]);
+
     commands
         .spawn()
         .insert(Player)
@@ -40,7 +44,7 @@ fn spawn_player(mut commands: Commands) {
             // Stores "which actions are currently pressed"
             action_state: ActionState::default(),
             // Describes how to convert from player inputs into those actions
-            input_map: InputMap::new([(input::Action::Select, MouseButton::Left)]),
+            input_map,
         });
 }
 
