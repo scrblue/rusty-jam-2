@@ -60,7 +60,7 @@ pub fn insert_unit_sync_event(
                     ..Default::default()
                 });
 
-                map.coords_to_unit.insert((q, r, z), *entity);
+                map.coords_to_unit.insert((q, r, z as i32), *entity);
             }
         }
     }
