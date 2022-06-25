@@ -248,12 +248,24 @@ impl Hybrid {
         self.head.head
     }
 
+    pub fn head_type(&self) -> &str {
+        &self.head.name
+    }
+
     pub fn body(&self) -> BodyStats {
         self.body.body
     }
 
+    pub fn body_type(&self) -> &str {
+        &self.body.name
+    }
+
     pub fn limbs(&self) -> LimbStats {
         self.limbs.limbs
+    }
+
+    pub fn limbs_type(&self) -> &str {
+        &self.limbs.name
     }
 }
 

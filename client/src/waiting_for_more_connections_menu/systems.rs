@@ -10,7 +10,7 @@ use naia_bevy_client::{
 
 use crate::{
     game::resources::Map, waiting_for_more_connections_menu::resources::WaitingFor,
-    ConnectionInformation, GameState, TileSprites,
+    ConnectionInformation, GameState, TileSprites, UnitSprites,
 };
 use rgj_shared::{
     protocol::{ClientKeepAlive, Identification, Protocol, ProtocolKind},
@@ -60,6 +60,41 @@ pub fn init(
         ocean,
         stormy_sky,
         windy_sky,
+    });
+
+    let bg_red = assets.load("unit_backgrounds/RedTeam.png");
+    let bg_orange = assets.load("unit_backgrounds/OrangeTeam.png");
+    let bg_yellow = assets.load("unit_backgrounds/YellowTeam.png");
+    let bg_green = assets.load("unit_backgrounds/GreenTeam.png");
+    let bg_blue = assets.load("unit_backgrounds/BlueTeam.png");
+    let bg_purple = assets.load("unit_backgrounds/PurpleTeam.png");
+
+    let fg_bat = assets.load("unit_foregrounds/Bat.png");
+    let fg_chicken = assets.load("unit_foregrounds/Chicken.png");
+    let fg_deer = assets.load("unit_foregrounds/Deer.png");
+    let fg_eel = assets.load("unit_foregrounds/Eel.png");
+    let fg_elephant = assets.load("unit_foregrounds/Elephant.png");
+    let fg_rattlesnake = assets.load("unit_foregrounds/Rattlesnake.png");
+    let fg_sailfish = assets.load("unit_foregrounds/Sailfish.png");
+    let fg_vulture = assets.load("unit_foregrounds/Vulture.png");
+    let fg_whale = assets.load("unit_foregrounds/Whale.png");
+
+    commands.insert_resource(UnitSprites {
+        bg_red,
+        bg_orange,
+        bg_yellow,
+        bg_green,
+        bg_blue,
+        bg_purple,
+        fg_bat,
+        fg_chicken,
+        fg_deer,
+        fg_eel,
+        fg_elephant,
+        fg_rattlesnake,
+        fg_sailfish,
+        fg_vulture,
+        fg_whale,
     });
 }
 

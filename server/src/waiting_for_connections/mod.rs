@@ -20,7 +20,9 @@ use rgj_shared::{
 use crate::{
     components::{AuthoritativeTileMap, TileMap},
     countdown::resources::{Countdown, TimeSinceLastCount},
-    resources::{KeyMapAssociation, KeyUnitsAssociation, MainRoom, UsernameKeyAssociation},
+    resources::{
+        KeyIdAssociation, KeyMapAssociation, KeyUnitsAssociation, MainRoom, UsernameKeyAssociation,
+    },
     Args, GameState, MapOption,
 };
 
@@ -209,6 +211,7 @@ pub fn init(mut commands: Commands, mut server: Server<Protocol, Channels>, args
     commands.insert_resource(UsernameKeyAssociation::new());
     commands.insert_resource(KeyMapAssociation::new());
     commands.insert_resource(KeyUnitsAssociation::new());
+    commands.insert_resource(KeyIdAssociation::new());
 }
 
 /// The tick fn will simply wait for the number of players to equal the configured, then enter the

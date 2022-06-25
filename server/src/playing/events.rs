@@ -152,8 +152,13 @@ fn handle_move_entity(
         ((abs_q + abs_q_plus_r + abs_r_div_2) as i32, diff_q, diff_r)
     };
 
+    if dist == 0 {
+        return Ok(CanTravel::InvalidTravel);
+    }
+
     // Draw a line through the two points
     let mut travels_through: Vec<AxialCoordinates> = Vec::new();
+
     for i in 0..=dist {
         let step_q = desired_pos.column_q as f32 + diff_q as f32 * 1.0 / dist as f32 * i as f32;
         let step_r = desired_pos.row_r as f32 + diff_r as f32 * 1.0 / dist as f32 * i as f32;

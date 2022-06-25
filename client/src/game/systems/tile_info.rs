@@ -6,7 +6,7 @@ use rgj_shared::{
     behavior::AxialCoordinates,
     components::genome::TerrainType,
     protocol::{
-        map_sync::{MapSync, TileStructure, TileType},
+        game_sync::map_sync::{MapSync, TileStructure, TileType},
         player_input::PlayerInputVariant,
         PlayerInput, Protocol, ProtocolKind, UnitSync,
     },

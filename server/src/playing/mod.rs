@@ -53,15 +53,15 @@ pub fn tick(
     key_map_assoc: Res<KeyMapAssociation>,
     key_units_assoc: Res<KeyUnitsAssociation>,
 ) {
-    // If there is a unit moving, process this every tick until the unit isn't moving to free up
-    // the turn again
     if let Some((entity, ref mut path)) = &mut move_info.0 {
         let mut unit_sync = query_units.get_mut(*entity).unwrap();
 
-        let run_updates = match path.pop_back() {
+        error!("{:?}", path);
+        let run_updates = match path.pop_front() {
             Some(next_stop) => {
                 // Process the move making sure to update
                 *unit_sync.position = next_stop;
+                move_info.0 = None;
                 true
             }
             None => {

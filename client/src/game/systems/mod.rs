@@ -1,5 +1,8 @@
 use bevy::prelude::*;
-use bevy_egui::{egui, EguiContext};
+use bevy_egui::{
+    egui::{self, Color32, RichText},
+    EguiContext,
+};
 use leafwing_input_manager::prelude::*;
 
 use naia_bevy_client::{
@@ -9,8 +12,9 @@ use naia_bevy_client::{
 
 use rgj_shared::{
     behavior::HEXAGON_SIZE,
+    components::players::PlayerId,
     protocol::{
-        map_sync::{MapSync, TileStructure, TileType},
+        game_sync::map_sync::{MapSync, TileStructure, TileType},
         notifications::WhoseTurn,
         player_input::PlayerInputVariant,
         PlayerInput, Protocol, ProtocolKind, UnitSync,
@@ -208,8 +212,17 @@ pub fn game_menu(
     mut egui_context: ResMut<EguiContext>,
 ) {
     let label = match &turn_tracker.whose_turn {
-        WhoseTurn::Yours => "It is your turn".to_owned(),
-        WhoseTurn::Player(string) => format!("It is {}'s turn", string),
+        WhoseTurn::Yours => RichText::new("It is your turn"),
+        WhoseTurn::Player(name, id) => {
+            RichText::new(format!("It is {}'s turn", name)).color(match id {
+                PlayerId::Red => Color32::from_rgb(175, 0, 0),
+                PlayerId::Orange => Color32::from_rgb(175, 70, 0),
+                PlayerId::Yellow => Color32::from_rgb(175, 160, 0),
+                PlayerId::Green => Color32::from_rgb(37, 175, 0),
+                PlayerId::Blue => Color32::from_rgb(0, 112, 175),
+                PlayerId::Purple => Color32::from_rgb(64, 0, 175),
+            })
+        }
     };
 
     let mut commit_turn = false;

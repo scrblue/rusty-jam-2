@@ -3,7 +3,7 @@ use naia_shared::{derive_serde, serde};
 
 pub const MAX_NUM_PLAYERS: usize = 6;
 
-#[derive(Copy, Eq, Hash)]
+#[derive(Copy, Debug, Eq, Hash)]
 #[derive_serde]
 pub enum PlayerId {
     Red,

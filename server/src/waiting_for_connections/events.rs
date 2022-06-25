@@ -87,14 +87,15 @@ pub fn connection_event<'world, 'state>(
         );
 
         // TODO: Ensure that PlayerId's don't mess up if multiple players connect on the same tick
+        let id = ID_ORDER[server.users_count() - 1];
         for key in server.user_keys() {
             server.send_message(
                 &key,
                 Channels::GameNotification,
-                &ClientConnected::new(username.clone(), ID_ORDER[server.users_count() - 1]),
+                &ClientConnected::new(username.clone(), id),
             );
 
-            key_id_assoc.insert(key, ID_ORDER[server.users_count() - 1]);
+            key_id_assoc.insert(*user_key, id);
         }
     }
 }
