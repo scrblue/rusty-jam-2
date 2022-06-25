@@ -14,6 +14,11 @@ pub struct TileSelectedState {
     pub error: String,
     pub moving_unit: Option<Entity>,
 
+    pub build_screen: bool,
+    pub head: Option<AnimalType>,
+    pub body: Option<AnimalType>,
+    pub limbs: Option<AnimalType>,
+
     pub tile: Option<AxialCoordinates>,
 }
 

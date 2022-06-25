@@ -8,7 +8,10 @@ use naia_bevy_client::{
 
 use rgj_shared::{
     behavior::{HEXAGON_HEIGHT, HEXAGON_SIZE, HEXAGON_WIDTH},
-    components::{genome::Hybrid, players::PlayerId},
+    components::{
+        genome::{Hybrid, DEER},
+        players::PlayerId,
+    },
     protocol::{
         game_sync::map_sync::{MapSync, TileStructure, TileType},
         ClientKeepAlive, Protocol, ProtocolKind, UnitSync,
@@ -134,7 +137,7 @@ pub fn receive_game_start_notification(
             commands.insert_resource(TurnTracker::new(&gsn.whose_turn));
             commands.insert_resource(TileSelectedState::default());
             commands.insert_resource(NextState(GameState::Game));
-            commands.insert_resource(UnlockedGenomes(Vec::new()));
+            commands.insert_resource(UnlockedGenomes(vec![DEER.clone()]));
         }
     }
 }

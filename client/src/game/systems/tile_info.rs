@@ -4,7 +4,7 @@ use naia_bevy_client::{events::UpdateComponentEvent, Client};
 
 use rgj_shared::{
     behavior::AxialCoordinates,
-    components::genome::TerrainType,
+    components::genome::{AnimalType, Hybrid, TerrainType, DEER},
     protocol::{
         game_sync::map_sync::{MapSync, TileStructure, TileType},
         player_input::PlayerInputVariant,
@@ -13,7 +13,7 @@ use rgj_shared::{
     Channels,
 };
 
-use crate::game::resources::{Map, TileSelectedEvent, TileSelectedState};
+use crate::game::resources::{Map, TileSelectedEvent, TileSelectedState, UnlockedGenomes};
 
 // TODO: Only run on state for performance
 pub fn display_info(
@@ -26,6 +26,7 @@ pub fn display_info(
     unit_sync_query: Query<&UnitSync>,
 
     map: Res<Map>,
+    genomes: Res<UnlockedGenomes>,
 
     mut state: ResMut<TileSelectedState>,
 
@@ -253,9 +254,11 @@ pub fn display_info(
                     ui.label((*tile_type).to_string());
                 });
 
+                let mut on_facility = false;
                 match &*structure {
                     TileStructure::None => {}
                     TileStructure::GenomeFacility { unique_genome } => {
+                        on_facility = true;
                         ui.label(format!(
                             "Guarding a genome facility containing {} genome",
                             unique_genome.name
@@ -273,9 +276,78 @@ pub fn display_info(
                         toggle_move = true;
                     }
                 }
+
+                if state.build_screen {
+                    if on_facility && ui.button("Close build menu").clicked() {
+                        state.build_screen = false;
+                    }
+                } else {
+                    if on_facility && ui.button("Open build menu").clicked() {
+                        state.build_screen = true;
+                    }
+                }
             });
 
-            if toggle_move {
+            let mut build_unit: Option<Hybrid> = None;
+            if state.build_screen {
+                egui::Window::new("Build View").show(egui_context.ctx_mut(), |ui| {
+                    egui::ComboBox::from_label("Select Head")
+                        .selected_text(format!(
+                            "{}",
+                            state.head.as_ref().unwrap_or(&DEER.clone()).name
+                        ))
+                        .show_ui(ui, |ui| {
+                            for genome in &genomes.0 {
+                                ui.selectable_value(
+                                    &mut state.head,
+                                    Some(genome.clone()),
+                                    &genome.name,
+                                );
+                            }
+                        });
+                    egui::ComboBox::from_label("Select Body")
+                        .selected_text(format!(
+                            "{}",
+                            state.body.as_ref().unwrap_or(&DEER.clone()).name
+                        ))
+                        .show_ui(ui, |ui| {
+                            for genome in &genomes.0 {
+                                ui.selectable_value(
+                                    &mut state.body,
+                                    Some(genome.clone()),
+                                    &genome.name,
+                                );
+                            }
+                        });
+                    egui::ComboBox::from_label("Select Limbs")
+                        .selected_text(format!(
+                            "{}",
+                            state.limbs.as_ref().unwrap_or(&DEER.clone()).name
+                        ))
+                        .show_ui(ui, |ui| {
+                            for genome in &genomes.0 {
+                                ui.selectable_value(
+                                    &mut state.limbs,
+                                    Some(genome.clone()),
+                                    &genome.name,
+                                );
+                            }
+                        });
+
+                    if ui.button("Build").clicked() {
+                        build_unit = Some(Hybrid::new(
+                            state.head.take().unwrap_or_else(|| DEER.clone()),
+                            state.body.take().unwrap_or_else(|| DEER.clone()),
+                            state.limbs.take().unwrap_or_else(|| DEER.clone()),
+                        ));
+                    }
+                });
+            }
+
+            if let Some(build_unit) = build_unit.take() {
+                state.build_screen = false;
+                Change::BuildUnit(*position, build_unit)
+            } else if toggle_move {
                 if state.moving_unit.is_none() {
                     Change::MoveUnit(*position, *layer)
                 } else {
@@ -335,6 +407,12 @@ pub fn display_info(
             state.moving_unit = None;
             state.error = String::new();
         }
+        Change::BuildUnit(pos, hybrid) => {
+            client.send_message(
+                Channels::PlayerInput,
+                &PlayerInput::new_complete(PlayerInputVariant::BuildHybrid(pos, hybrid)),
+            );
+        }
         Change::None => {}
     }
 }
@@ -343,4 +421,5 @@ pub enum Change {
     None,
     MoveUnit(AxialCoordinates, i32),
     CancelMoveUnit,
+    BuildUnit(AxialCoordinates, Hybrid),
 }
