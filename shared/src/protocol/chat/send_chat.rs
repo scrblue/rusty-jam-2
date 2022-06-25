@@ -12,4 +12,3 @@ impl SendChat {
         SendChat::new_complete(message)
     }
 }
-

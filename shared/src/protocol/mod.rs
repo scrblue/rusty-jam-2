@@ -16,7 +16,10 @@ pub mod countdown;
 pub use countdown::Countdown;
 
 pub mod notifications;
-pub use notifications::{game_start::GameStartNotification, turn_change::TurnChangeNotification};
+pub use notifications::{
+    client_connected::ClientConnected, game_start::GameStartNotification,
+    turn_change::TurnChangeNotification,
+};
 
 pub mod game_sync;
 pub use game_sync::{map_sync::MapSync, unit_sync::UnitSync};
@@ -32,9 +35,10 @@ pub enum Protocol {
     PlayerInput(PlayerInput),
 
     WaitingOnPlayers(WaitingOnPlayers),
+    ClientConnected(ClientConnected),
     Countdown(Countdown),
 
-	ReceiveChat(ReceiveChat),
+    ReceiveChat(ReceiveChat),
 
     GameStartNotification(GameStartNotification),
     TurnChangeNotification(TurnChangeNotification),
