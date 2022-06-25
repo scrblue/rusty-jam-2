@@ -15,7 +15,7 @@ use rgj_shared::{
     components::players::PlayerId,
     protocol::{
         game_sync::map_sync::{MapSync, TileStructure, TileType},
-        notifications::WhoseTurn,
+        notifications::{genome_status_change::LockedStatus, WhoseTurn},
         player_input::PlayerInputVariant,
         PlayerInput, Protocol, ProtocolKind, UnitSync,
     },
@@ -26,7 +26,7 @@ use crate::TileSprites;
 
 use super::{
     components::TileWithBuilding,
-    resources::{Map, TurnTracker},
+    resources::{Map, TurnTracker, UnlockedGenomes},
 };
 
 pub mod input;
@@ -259,6 +259,30 @@ pub fn receive_turn_change_notification(
             event
         {
             commands.insert_resource(TurnTracker::new(&gsn.whose_turn));
+        }
+    }
+}
+
+pub fn receive_genome_status_change_notification(
+    mut event_reader: EventReader<MessageEvent<Protocol, Channels>>,
+    mut genomes: ResMut<UnlockedGenomes>,
+) {
+    for event in event_reader.iter() {
+        if let MessageEvent(Channels::GameNotification, Protocol::GenomeStatusChange(gsc)) = event {
+            match *gsc.status {
+                LockedStatus::Locked => {
+                    error!("Relocked: {}", gsc.species.name);
+                    genomes.0 = genomes
+                        .0
+                        .drain(..)
+                        .filter(|entry| entry != &*gsc.species)
+                        .collect();
+                }
+                LockedStatus::Unlocked => {
+                    error!("Unlocked: {}", gsc.species.name);
+                    genomes.0.push((&*gsc.species).clone());
+                }
+            }
         }
     }
 }

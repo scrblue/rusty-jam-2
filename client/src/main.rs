@@ -143,6 +143,7 @@ fn main() {
                 .with_system(game_systems::update_unit_component_event)
                 .with_system(common_systems::insert_unit_sync_event)
                 .with_system(game_systems::receive_turn_change_notification)
+                .with_system(game_systems::receive_genome_status_change_notification)
                 .into(),
         )
         .add_system_set_to_stage(

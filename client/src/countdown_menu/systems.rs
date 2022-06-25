@@ -20,9 +20,9 @@ use super::resources::SecondsLeft;
 use crate::{
     game::{
         components::TileWithBuilding,
-        resources::{Map, TileSelectedState, TurnTracker},
+        resources::{Map, TileSelectedState, TurnTracker, UnlockedGenomes},
     },
-    GameState, TileSprites, UnitSprites,
+    GameState, TileSprites,
 };
 
 pub fn init(mut commands: Commands) {
@@ -134,6 +134,7 @@ pub fn receive_game_start_notification(
             commands.insert_resource(TurnTracker::new(&gsn.whose_turn));
             commands.insert_resource(TileSelectedState::default());
             commands.insert_resource(NextState(GameState::Game));
+            commands.insert_resource(UnlockedGenomes(Vec::new()));
         }
     }
 }

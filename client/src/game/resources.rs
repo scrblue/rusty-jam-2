@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use bevy::prelude::Entity;
 use rgj_shared::{
     behavior::AxialCoordinates,
+    components::genome::AnimalType,
     protocol::{notifications::WhoseTurn, player_input::PlayerInputVariant, MapSync, UnitSync},
 };
 
@@ -34,3 +35,5 @@ pub struct Map {
     pub coords_to_tile: HashMap<(i32, i32, i32), Entity>,
     pub coords_to_unit: HashMap<(i32, i32, i32), Entity>,
 }
+
+pub struct UnlockedGenomes(pub Vec<AnimalType>);

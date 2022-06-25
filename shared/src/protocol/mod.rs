@@ -18,7 +18,7 @@ pub use countdown::Countdown;
 pub mod notifications;
 pub use notifications::{
     client_connected::ClientConnected, game_start::GameStartNotification,
-    turn_change::TurnChangeNotification,
+    genome_status_change::GenomeStatusChange, turn_change::TurnChangeNotification,
 };
 
 pub mod game_sync;
@@ -41,6 +41,7 @@ pub enum Protocol {
     ReceiveChat(ReceiveChat),
 
     GameStartNotification(GameStartNotification),
+    GenomeStatusChange(GenomeStatusChange),
     TurnChangeNotification(TurnChangeNotification),
 
     MapSync(MapSync),

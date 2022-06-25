@@ -10,7 +10,11 @@ use rgj_shared::{
         game_sync::map_sync::{
             index_to_tile_qrz, tile_qrz_to_index, TileStructure, TileType, MAP_HEIGHT,
         },
-        notifications::{game_start::GameStartNotification, WhoseTurn},
+        notifications::{
+            game_start::GameStartNotification,
+            genome_status_change::{GenomeStatusChange, LockedStatus},
+            WhoseTurn,
+        },
         MapSync, Protocol, UnitSync,
     },
     resources::MapConfig,
@@ -87,7 +91,12 @@ pub fn tick(
                     let key = key_units_assoc.get_from_entity(*entity).unwrap();
                     let genomes = unlocked_genomes.key_to_genomes.get_mut(key).unwrap();
 
-                    error!("Removing {}", unique_genome.name);
+                    server.send_message(
+                        key,
+                        Channels::GameNotification,
+                        &GenomeStatusChange::new(unique_genome.clone(), LockedStatus::Locked),
+                    );
+
                     *genomes = genomes
                         .drain(..)
                         .filter(|elem| elem != unique_genome)
@@ -110,7 +119,13 @@ pub fn tick(
                 if let TileStructure::GenomeFacility { unique_genome } = &*auth_tile_new.structure {
                     let key = key_units_assoc.get_from_entity(*entity).unwrap();
                     let genomes = unlocked_genomes.key_to_genomes.get_mut(key).unwrap();
-                    error!("Adding {}", unique_genome.name);
+
+                    server.send_message(
+                        key,
+                        Channels::GameNotification,
+                        &GenomeStatusChange::new(unique_genome.clone(), LockedStatus::Unlocked),
+                    );
+
                     genomes.push(unique_genome.clone());
                 }
 
