@@ -1,5 +1,5 @@
 use lazy_static::lazy_static;
-use naia_shared::{derive_serde, serde};
+use naia_shared::{derive_serde, serde, ReplicateSafe};
 
 // TODO: Implement diet
 // TODO: Special effects per genome
@@ -221,6 +221,7 @@ lazy_static! {
     };
 }
 
+#[derive(Debug)]
 #[derive_serde]
 pub struct Hybrid {
     head: AnimalType,
@@ -248,24 +249,36 @@ impl Hybrid {
         self.head.head
     }
 
-    pub fn head_type(&self) -> &str {
+    pub fn head_name(&self) -> &str {
         &self.head.name
+    }
+
+    pub fn head_type(&self) -> &AnimalType {
+        &self.head
     }
 
     pub fn body(&self) -> BodyStats {
         self.body.body
     }
 
-    pub fn body_type(&self) -> &str {
+    pub fn body_name(&self) -> &str {
         &self.body.name
+    }
+
+    pub fn body_type(&self) -> &AnimalType {
+        &self.body
     }
 
     pub fn limbs(&self) -> LimbStats {
         self.limbs.limbs
     }
 
-    pub fn limbs_type(&self) -> &str {
+    pub fn limbs_name(&self) -> &str {
         &self.limbs.name
+    }
+
+    pub fn limbs_type(&self) -> &AnimalType {
+        &self.limbs
     }
 }
 

@@ -192,6 +192,7 @@ pub fn init(mut commands: Commands, mut server: Server<Protocol, Channels>, args
 
                         Ok(TileStructure::GenomeFacility {
                             unique_genome: genome,
+                            building: None,
                         })
                     }
                     _ => Err(MapCharacterUnrecognized),

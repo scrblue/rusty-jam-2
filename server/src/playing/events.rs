@@ -1,11 +1,14 @@
-use bevy::{ecs::query, prelude::*};
+use bevy::prelude::*;
 use naia_bevy_server::{events::MessageEvent, Server, UserKey};
 
 use rgj_shared::{
     behavior::AxialCoordinates,
     components::genome::TerrainType,
     protocol::{
-        game_sync::map_sync::{tile_qrz_to_index, MapSync, TileType},
+        game_sync::map_sync::{
+            tile_qrz_to_index, ConstructionStatus, MapSync, TileStructure, TileType,
+        },
+        notifications::WhoseTurn,
         player_input::PlayerInputVariant,
         PlayerInput, Protocol, TurnChangeNotification, UnitSync,
     },
@@ -13,7 +16,7 @@ use rgj_shared::{
     Channels,
 };
 
-use super::resources::{TurnTracker, UnitMoveInformation};
+use super::resources::{KeyToUnlockedGenomesMap, TurnTracker, UnitMoveInformation};
 use crate::{
     components::TileMap,
     resources::{
@@ -27,7 +30,7 @@ pub fn receive_input_event(
     mut event_reader: EventReader<MessageEvent<Protocol, Channels>>,
 
     query_tilemap: Query<&TileMap>,
-    query_tile: Query<&MapSync>,
+    mut query_tile: Query<&mut MapSync>,
     query_unit: Query<&UnitSync>,
 
     mut turn_tracker: ResMut<TurnTracker>,
@@ -37,6 +40,7 @@ pub fn receive_input_event(
     user_key_assoc: Res<UsernameKeyAssociation>,
     key_id_assoc: Res<KeyIdAssociation>,
     key_units_assoc: Res<KeyUnitsAssociation>,
+    key_genomes: Res<KeyToUnlockedGenomesMap>,
     main_room: Res<MainRoom>,
 ) {
     for event in event_reader.iter() {
@@ -74,8 +78,51 @@ pub fn receive_input_event(
                         turn_tracker.next(&mut server, &user_key_assoc, &key_id_assoc);
                     }
 
-                    PlayerInputVariant::BuildHybrid(_pos, hybrid) => {
-                        error!("Player wants to build {}", hybrid.name());
+                    PlayerInputVariant::BuildHybrid(pos, hybrid) => {
+                        let tilemap = &query_tilemap.get(main_room.map_entity).unwrap().children;
+                        let mut tile = query_tile
+                            .get_mut(
+                                tilemap[tile_qrz_to_index(&map_conf, pos.column_q, pos.row_r, 0)],
+                            )
+                            .unwrap();
+
+                        // Ensure the player has a unit on that tile
+                        let units = key_units_assoc.get_from_key(*user_key).unwrap();
+                        if units
+                            .iter()
+                            .map(|u| {
+                                let u = query_unit.get(*u).unwrap();
+                                *u.position
+                            })
+                            .collect::<Vec<_>>()
+                            .contains(&*tile.position)
+                        {
+                            // Ensure the unit to be built is all genomes the player has
+                            let genomes = key_genomes.key_to_genomes.get(user_key).unwrap();
+
+                            if genomes.contains(hybrid.head_type())
+                                && genomes.contains(hybrid.body_type())
+                                && genomes.contains(hybrid.limbs_type())
+                            {
+                                if let TileStructure::GenomeFacility {
+                                    ref mut building, ..
+                                } = &mut *tile.structure
+                                {
+                                    let turn = WhoseTurn::Player {
+                                        username: user_key_assoc
+                                            .get_from_key(user_key)
+                                            .unwrap()
+                                            .to_owned(),
+                                        id: key_id_assoc.get_from_key(user_key).unwrap().to_owned(),
+                                        turn_number: turn_tracker.turn_number + 1,
+                                    };
+                                    *building = Some(ConstructionStatus {
+                                        building: hybrid.clone(),
+                                        finished_on: turn,
+                                    });
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -101,7 +148,7 @@ fn handle_move_entity(
     axial_coordianates: AxialCoordinates,
 
     query_tilemap: &Query<&TileMap>,
-    query_tile: &Query<&MapSync>,
+    query_tile: &Query<&mut MapSync>,
     query_unit: &Query<&UnitSync>,
 
     key_units_assoc: &KeyUnitsAssociation,

@@ -4,7 +4,12 @@ use bevy::prelude::{Color, Component};
 use naia_shared::{derive_serde, serde, Property, Replicate};
 use thiserror::Error;
 
-use crate::{behavior::AxialCoordinates, components::genome::AnimalType, resources::MapConfig};
+use crate::{
+    behavior::AxialCoordinates,
+    components::genome::{AnimalType, Hybrid},
+    protocol::notifications::WhoseTurn,
+    resources::MapConfig,
+};
 
 /// Represents the two layers, ground and air levels
 pub const MAP_HEIGHT: i32 = 2;
@@ -144,9 +149,19 @@ impl From<TileType> for Color {
 
 #[derive(Debug)]
 #[derive_serde]
+pub struct ConstructionStatus {
+    pub building: Hybrid,
+    pub finished_on: WhoseTurn,
+}
+
+#[derive(Debug)]
+#[derive_serde]
 pub enum TileStructure {
     None,
-    GenomeFacility { unique_genome: AnimalType },
+    GenomeFacility {
+        unique_genome: AnimalType,
+        building: Option<ConstructionStatus>,
+    },
 }
 
 impl From<&TileStructure> for Color {

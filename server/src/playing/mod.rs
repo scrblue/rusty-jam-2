@@ -87,7 +87,9 @@ pub fn tick(
                     )
                     .unwrap();
 
-                if let TileStructure::GenomeFacility { unique_genome } = &*auth_tile_old.structure {
+                if let TileStructure::GenomeFacility { unique_genome, .. } =
+                    &*auth_tile_old.structure
+                {
                     let key = key_units_assoc.get_from_entity(*entity).unwrap();
                     let genomes = unlocked_genomes.key_to_genomes.get_mut(key).unwrap();
 
@@ -116,7 +118,9 @@ pub fn tick(
                     )
                     .unwrap();
 
-                if let TileStructure::GenomeFacility { unique_genome } = &*auth_tile_new.structure {
+                if let TileStructure::GenomeFacility { unique_genome, .. } =
+                    &*auth_tile_new.structure
+                {
                     let key = key_units_assoc.get_from_entity(*entity).unwrap();
                     let genomes = unlocked_genomes.key_to_genomes.get_mut(key).unwrap();
 

@@ -8,6 +8,7 @@ pub mod genome_status_change;
 pub mod turn_change;
 
 // TODO: move to components mod (and probably rename components)
+#[derive(Debug)]
 #[derive_serde]
 pub enum WhoseTurn {
     Yours {
