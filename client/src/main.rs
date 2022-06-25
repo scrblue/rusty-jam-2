@@ -3,6 +3,7 @@
 
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
+use bevy_kira_audio::{Audio, AudioPlugin};
 use bevy_prototype_lyon::prelude::ShapePlugin;
 use iyes_loopless::prelude::*;
 
@@ -33,6 +34,7 @@ fn main() {
         .add_event::<TileSelectedEvent>()
         .add_plugins(DefaultPlugins)
         .add_plugin(EguiPlugin)
+        .add_plugin(AudioPlugin)
         // .insert_resource(WorldInspectorParams {
         //     despawnable_entities: true,
         //     highlight_changes: true,
