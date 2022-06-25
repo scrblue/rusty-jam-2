@@ -1,0 +1,4 @@
+* Throttle server + why need to restart ?
+* Fix OrthographicProjection scaling
+* Fix egui WorldInspector does not appear
+* 127.0.0.1:1234 default url + room/pw to speed up iterating

@@ -68,7 +68,7 @@ pub fn display_info(
                     let abs_q_plus_r = i32::abs(diff_q + diff_r);
                     let abs_r_div_2 = i32::abs(diff_r) / 2;
 
-                    ((abs_q + abs_q_plus_r + abs_r_div_2) as u16, diff_q, diff_r)
+                    ((abs_q + abs_q_plus_r + abs_r_div_2) as i32, diff_q, diff_r)
                 };
 
                 // Draw a line through the two points
@@ -80,8 +80,8 @@ pub fn display_info(
                         desired_pos.row_r as f32 + diff_r as f32 * 1.0 / dist as f32 * i as f32;
 
                     travels_through.push(AxialCoordinates::new(
-                        step_q.round() as u16,
-                        step_r.round() as u16,
+                        step_q.round() as i32,
+                        step_r.round() as i32,
                     ));
                 }
 
@@ -341,6 +341,6 @@ pub fn display_info(
 
 pub enum Change {
     None,
-    MoveUnit(AxialCoordinates, u16),
+    MoveUnit(AxialCoordinates, i32),
     CancelMoveUnit,
 }

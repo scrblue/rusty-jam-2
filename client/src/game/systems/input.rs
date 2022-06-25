@@ -1,5 +1,7 @@
 use std::str::Split;
 
+use leafwing_input_manager::prelude::*;
+
 use bevy::{
     input::mouse::{MouseMotion, MouseWheel},
     prelude::*,
@@ -12,30 +14,55 @@ use rgj_shared::{
     protocol::{player_input::PlayerInputVariant, MapSync},
 };
 
+use super::Player;
+
 use crate::game::resources::{Map, TileSelectedEvent, TurnTracker};
 
-pub fn camera_system(
+// This is the list of "things in the game I want to be able to do based on input"
+#[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug)]
+pub enum Action {
+    Pan,
+    Select,
+    Zoom,
+}
+pub fn default_input_map() -> InputMap<Action> {
+    let mut input_map = InputMap::default();
+    input_map.insert(Action::Select, MouseButton::Left);
+    input_map.insert(Action::Pan, MouseButton::Middle);
+    input_map.insert(Action::Pan, KeyCode::LShift);
+    input_map
+}
+
+pub fn pan_camera_system(
     mut ev_motion: EventReader<MouseMotion>,
-    mut ev_scroll: EventReader<MouseWheel>,
-
     mut camera_query: Query<(&mut OrthographicProjection, &mut GlobalTransform)>,
-
-    input_mouse_button: Res<Input<MouseButton>>,
+    action_query: Query<&ActionState<Action>, With<Player>>,
 ) {
     let mut pan = Vec2::ZERO;
-    let mut scroll = 0.0;
+    let action_state = action_query.single();
 
-    if input_mouse_button.pressed(MouseButton::Middle) {
+    if action_state.pressed(Action::Pan) {
         for event in ev_motion.iter() {
             pan += event.delta;
         }
     }
 
+    let (camera_proj, mut camera_trans) = camera_query.get_single_mut().unwrap();
+    camera_trans.translation.x -= pan.x * camera_proj.scale;
+    camera_trans.translation.y += pan.y * camera_proj.scale;
+}
+
+pub fn zoom_camera_system(
+    mut ev_scroll: EventReader<MouseWheel>,
+    mut camera_query: Query<(&mut OrthographicProjection, &mut GlobalTransform)>,
+) {
+    let mut scroll = 0.0;
+
     for event in ev_scroll.iter() {
         scroll += event.y;
     }
 
-    let (mut camera_proj, mut camera_trans) = camera_query.get_single_mut().unwrap();
+    let (mut camera_proj, _) = camera_query.get_single_mut().unwrap();
 
     if camera_proj.scale > 0.0 {
         camera_proj.scale -= scroll * 0.01;
@@ -43,21 +70,18 @@ pub fn camera_system(
             camera_proj.scale = 0.1;
         }
     }
-    camera_trans.translation.x -= pan.x * camera_proj.scale;
-    camera_trans.translation.y += pan.y * camera_proj.scale;
 }
 
 pub fn select_entity(
     mut entity_selected: EventWriter<TileSelectedEvent>,
-
+    action_query: Query<&ActionState<Action>, With<Player>>,
     camera_transform_query: Query<(&GlobalTransform, &OrthographicProjection)>,
-
-    input_mouse_button: Res<Input<MouseButton>>,
     windows: Res<Windows>,
     mut egui_context: ResMut<EguiContext>,
 ) {
     if !egui_context.ctx_mut().wants_pointer_input() {
-        if input_mouse_button.just_pressed(MouseButton::Right) {
+        let action_state = action_query.single();
+        if action_state.pressed(Action::Select) {
             let window = windows.get_primary().unwrap();
 
             if let Some(position) = window.cursor_position() {
@@ -76,9 +100,9 @@ pub fn select_entity(
                 q = q.round();
                 r = r.round();
 
-                if q >= 0.0 && r >= 0.0 && q <= u16::MAX as f32 && r <= u16::MAX as f32 {
-                    let q = q as u16;
-                    let r = r as u16;
+                if q >= 0.0 && r >= 0.0 && q <= i32::MAX as f32 && r <= i32::MAX as f32 {
+                    let q = q as i32;
+                    let r = r as i32;
 
                     let qr = AxialCoordinates::new(q, r);
 

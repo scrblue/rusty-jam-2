@@ -27,9 +27,9 @@ pub mod events;
 
 fn init_tile(
     commands: &mut Commands,
-    q: u16,
-    r: u16,
-    z: u16,
+    q: i32,
+    r: i32,
+    z: i32,
     tile: TileType,
     structure: TileStructure,
 ) -> Entity {
@@ -58,9 +58,9 @@ pub fn init(mut commands: Commands, mut server: Server<Protocol, Channels>, args
             let mut auth_map_entities = Vec::with_capacity(size_x as usize * size_y as usize * 2);
 
             // TODO: Procedurally generate
-            for z in 0..MAP_HEIGHT {
-                for r in 0..size_y {
-                    for q in 0..size_x {
+            for z in 0..MAP_HEIGHT as i32 {
+                for r in 0..size_y as i32 {
+                    for q in 0..size_x as i32 {
                         if z == 1 {
                             auth_map_entities.push(init_tile(
                                 &mut commands,
@@ -168,9 +168,9 @@ pub fn init(mut commands: Commands, mut server: Server<Protocol, Channels>, args
                     for q in 0..x_size {
                         auth_map_entities.push(init_tile(
                             &mut commands,
-                            q as u16,
-                            r as u16,
-                            z,
+                            q as i32,
+                            r as i32,
+                            z as i32,
                             tiles.next().unwrap(),
                             structures.next().unwrap_or(TileStructure::None),
                         ));
@@ -219,7 +219,7 @@ pub fn tick(mut commands: Commands, mut server: Server<Protocol, Channels>, args
         commands.insert_resource(NextState(GameState::Countdown));
 
         // Insert resources needed for next state
-        commands.insert_resource(Countdown(10));
+        commands.insert_resource(Countdown(3));
         commands.insert_resource(TimeSinceLastCount(Duration::from_secs(0)));
     }
 

@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContext};
+use leafwing_input_manager::prelude::*;
+
 use naia_bevy_client::{
     events::{InsertComponentEvent, MessageEvent, UpdateComponentEvent},
     Client,
@@ -58,10 +60,25 @@ pub fn insert_unit_sync_event(
                     ..Default::default()
                 });
 
-                map.coords_to_unit.insert((q, r, z), *entity);
+                map.coords_to_unit.insert((q, r, z as i32), *entity);
             }
         }
     }
+}
+
+#[derive(Component)]
+pub struct Player;
+
+pub fn spawn_player(mut commands: Commands) {
+    commands
+        .spawn()
+        .insert(Player)
+        .insert_bundle(InputManagerBundle::<input::Action> {
+            // Stores "which actions are currently pressed"
+            action_state: ActionState::default(),
+            // Describes how to convert from player inputs into those actions
+            input_map: input::default_input_map(),
+        });
 }
 
 pub fn update_map_component_event(
@@ -160,13 +177,13 @@ pub fn update_unit_component_event(
                     q = q.round();
                     r = r.round();
 
-                    if q >= 0.0 && r >= 0.0 && q <= u16::MAX as f32 && r <= u16::MAX as f32 {
-                        let q = q as u16;
-                        let r = r as u16;
+                    if q >= 0.0 && r >= 0.0 && q <= i32::MAX as f32 && r <= i32::MAX as f32 {
+                        let q = q as i32;
+                        let r = r as i32;
 
                         (q, r)
                     } else {
-                        panic!("Could not fit in u16");
+                        panic!("Could not fit in i32");
                     }
                 };
 
