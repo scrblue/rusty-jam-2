@@ -212,9 +212,9 @@ pub fn game_menu(
     mut egui_context: ResMut<EguiContext>,
 ) {
     let label = match &turn_tracker.whose_turn {
-        WhoseTurn::Yours => RichText::new("It is your turn"),
-        WhoseTurn::Player(name, id) => {
-            RichText::new(format!("It is {}'s turn", name)).color(match id {
+        WhoseTurn::Yours { .. } => RichText::new("It is your turn"),
+        WhoseTurn::Player { username, id, .. } => {
+            RichText::new(format!("It is {}'s turn", username)).color(match id {
                 PlayerId::Red => Color32::from_rgb(175, 0, 0),
                 PlayerId::Orange => Color32::from_rgb(175, 70, 0),
                 PlayerId::Yellow => Color32::from_rgb(175, 160, 0),
@@ -227,15 +227,19 @@ pub fn game_menu(
 
     let mut commit_turn = false;
 
-    if turn_tracker.whose_turn == WhoseTurn::Yours {
-        egui::Window::new("Turn Tracker").show(egui_context.ctx_mut(), |ui| {
-            ui.label(label);
-            commit_turn = ui.button("End Turn").clicked();
-        });
-    } else {
-        egui::Window::new("Turn Tracker").show(egui_context.ctx_mut(), |ui| {
-            ui.label(label);
-        });
+    match turn_tracker.whose_turn {
+        WhoseTurn::Yours { turn_number } => {
+            egui::Window::new(format!("Turn {}", turn_number)).show(egui_context.ctx_mut(), |ui| {
+                ui.label(label);
+                commit_turn = ui.button("End Turn").clicked();
+            });
+        }
+
+        WhoseTurn::Player { turn_number, .. } => {
+            egui::Window::new(format!("Turn {}", turn_number)).show(egui_context.ctx_mut(), |ui| {
+                ui.label(label);
+            });
+        }
     }
 
     if commit_turn {

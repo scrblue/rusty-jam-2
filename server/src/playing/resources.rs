@@ -20,6 +20,7 @@ pub struct TurnTracker {
     pub turn_number: u16,
     pub time_left: Option<Duration>,
 
+    first_player: UserKey,
     players: VecDeque<UserKey>,
 }
 
@@ -41,16 +42,17 @@ impl TurnTracker {
                 server.send_message(
                     &key,
                     Channels::GameNotification,
-                    &GameStartNotification::new_complete(WhoseTurn::Yours),
+                    &GameStartNotification::new_complete(WhoseTurn::Yours { turn_number: 1 }),
                 );
             } else {
                 server.send_message(
                     &key,
                     Channels::GameNotification,
-                    &GameStartNotification::new_complete(WhoseTurn::Player(
-                        user_key_assoc.get_from_key(&player).unwrap().to_owned(),
-                        *key_id_assoc.get_from_key(&player).unwrap(),
-                    )),
+                    &GameStartNotification::new_complete(WhoseTurn::Player {
+                        username: user_key_assoc.get_from_key(&player).unwrap().to_owned(),
+                        id: *key_id_assoc.get_from_key(&player).unwrap(),
+                        turn_number: 1,
+                    }),
                 );
             }
         }
@@ -59,8 +61,9 @@ impl TurnTracker {
 
         TurnTracker {
             player: player,
-            turn_number: 0,
+            turn_number: 1,
             time_left: turn_timers,
+            first_player: player,
             players,
         }
     }
@@ -76,21 +79,28 @@ impl TurnTracker {
 
         self.player = player;
 
+        if player == self.first_player {
+            self.turn_number += 1;
+        }
+
         for key in server.user_keys() {
             if key == player {
                 server.send_message(
                     &key,
                     Channels::GameNotification,
-                    &TurnChangeNotification::new_complete(WhoseTurn::Yours),
+                    &TurnChangeNotification::new_complete(WhoseTurn::Yours {
+                        turn_number: self.turn_number,
+                    }),
                 );
             } else {
                 server.send_message(
                     &key,
                     Channels::GameNotification,
-                    &TurnChangeNotification::new_complete(WhoseTurn::Player(
-                        user_key_assoc.get_from_key(&player).unwrap().to_owned(),
-                        *key_id_assoc.get_from_key(&player).unwrap(),
-                    )),
+                    &TurnChangeNotification::new_complete(WhoseTurn::Player {
+                        username: user_key_assoc.get_from_key(&player).unwrap().to_owned(),
+                        id: *key_id_assoc.get_from_key(&player).unwrap(),
+                        turn_number: self.turn_number,
+                    }),
                 );
             }
         }
