@@ -13,7 +13,7 @@ use naia_bevy_client::{ClientConfig, Plugin as ClientPlugin, Stage};
 use rgj_shared::{protocol::Protocol, shared_config, Channels};
 
 use rgj_client::{
-    connect_menu,
+    common_systems, connect_menu,
     countdown_menu::systems as countdown_systems,
     game::{resources::TileSelectedEvent, systems as game_systems},
     waiting_for_more_connections_menu::systems as waiting_systems,
@@ -89,7 +89,7 @@ fn main() {
                 // sure that entities still spawn while this happens
                 .with_system(countdown_systems::spawn_entity_event)
                 .with_system(countdown_systems::insert_map_sync_event)
-                .with_system(countdown_systems::insert_unit_sync_event)
+                .with_system(common_systems::insert_unit_sync_event)
                 .with_system(waiting_systems::receive_waiting_on_players_message)
                 .with_system(waiting_systems::receive_countdown_message)
                 .into(),
@@ -116,7 +116,7 @@ fn main() {
                 .run_in_state(GameState::CountdownMenu)
                 .with_system(countdown_systems::spawn_entity_event)
                 .with_system(countdown_systems::insert_map_sync_event)
-                .with_system(countdown_systems::insert_unit_sync_event)
+                .with_system(common_systems::insert_unit_sync_event)
                 .with_system(countdown_systems::receive_countdown_message)
                 .with_system(countdown_systems::receive_game_start_notification)
                 .into(),
@@ -141,7 +141,7 @@ fn main() {
                 .run_in_state(GameState::Game)
                 .with_system(game_systems::update_map_component_event)
                 .with_system(game_systems::update_unit_component_event)
-                .with_system(game_systems::insert_unit_sync_event)
+                .with_system(common_systems::insert_unit_sync_event)
                 .with_system(game_systems::receive_turn_change_notification)
                 .into(),
         )

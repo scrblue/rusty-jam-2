@@ -79,7 +79,7 @@ pub fn select_entity(
     windows: Res<Windows>,
     mut egui_context: ResMut<EguiContext>,
 ) {
-    if !egui_context.ctx_mut().wants_pointer_input() {
+    if !egui_context.ctx_mut().is_pointer_over_area() {
         let action_state = action_query.single();
         if action_state.pressed(Action::Select) {
             let window = windows.get_primary().unwrap();
