@@ -7,6 +7,8 @@ pub enum Channels {
     ClientKeepAlive,
     PlayerInput,
 
+    Chat,
+
     WaitingOnPlayers,
     Countdown,
     GameNotification,
@@ -22,6 +24,12 @@ pub const CHANNEL_CONFIG: &[Channel<Channels>] = &[
     Channel {
         index: Channels::PlayerInput,
         direction: ChannelDirection::ClientToServer,
+        mode: ChannelMode::OrderedReliable(ReliableSettings::default()),
+    },
+    // Bidirecitonal
+    Channel {
+        index: Channels::Chat,
+        direction: ChannelDirection::Bidirectional,
         mode: ChannelMode::OrderedReliable(ReliableSettings::default()),
     },
     // Server-to-client

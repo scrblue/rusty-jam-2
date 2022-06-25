@@ -8,8 +8,10 @@ use rgj_shared::{
     behavior::AxialCoordinates,
     components::genome::{Hybrid, CHICKEN, DEER},
     protocol::{
-        map_sync::{MapSync, TileStructure, TileType, MAP_HEIGHT},
-        unit_sync::UnitSync,
+        game_sync::{
+            map_sync::{MapSync, TileStructure, TileType, MAP_HEIGHT},
+            unit_sync::UnitSync,
+        },
         Countdown as CountdownPacket, Protocol,
     },
     resources::MapConfig,
@@ -18,7 +20,7 @@ use rgj_shared::{
 
 use crate::{
     components::{PerspectiveTileMap, TileMap},
-    resources::{KeyMapAssociation, KeyUnitsAssociation, MainRoom},
+    resources::{KeyIdAssociation, KeyMapAssociation, KeyUnitsAssociation, MainRoom},
     Args, GameState,
 };
 
@@ -38,6 +40,7 @@ pub fn init(
     args: Res<Args>,
     main_room: Res<MainRoom>,
     map_config: Res<MapConfig>,
+    key_id_assoc: Res<KeyIdAssociation>,
     mut key_map_assoc: ResMut<KeyMapAssociation>,
     mut key_units_assoc: ResMut<KeyUnitsAssociation>,
 ) {
@@ -68,6 +71,7 @@ pub fn init(
             .insert(UnitSync::new_complete(
                 starting_positions[index],
                 0,
+                *key_id_assoc.get_from_key(&key).unwrap(),
                 Hybrid::new(DEER.clone(), DEER.clone(), DEER.clone()),
                 DEER.body.health,
                 DEER.limbs.terrain_a.tiles_per_turn.into(),

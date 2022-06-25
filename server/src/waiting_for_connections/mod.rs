@@ -8,8 +8,9 @@ use naia_bevy_server::{Server, ServerAddrs};
 
 use rgj_shared::{
     behavior::AxialCoordinates,
+    components::players::PlayerId,
     protocol::{
-        map_sync::{MapSync, TileStructure, TileType, MAP_HEIGHT},
+        game_sync::map_sync::{MapSync, TileStructure, TileType, MAP_HEIGHT},
         Protocol, WaitingOnPlayers,
     },
     resources::MapConfig,

@@ -5,7 +5,7 @@ use rgj_shared::{
     behavior::AxialCoordinates,
     components::genome::TerrainType,
     protocol::{
-        map_sync::{tile_qrz_to_index, MapSync, TileType},
+        game_sync::map_sync::{tile_qrz_to_index, MapSync, TileType},
         player_input::PlayerInputVariant,
         PlayerInput, Protocol, TurnChangeNotification, UnitSync,
     },
@@ -16,7 +16,9 @@ use rgj_shared::{
 use super::resources::{TurnTracker, UnitMoveInformation};
 use crate::{
     components::TileMap,
-    resources::{KeyMapAssociation, KeyUnitsAssociation, MainRoom, UsernameKeyAssociation},
+    resources::{
+        KeyIdAssociation, KeyMapAssociation, KeyUnitsAssociation, MainRoom, UsernameKeyAssociation,
+    },
 };
 
 pub fn receive_input_event(
@@ -33,6 +35,7 @@ pub fn receive_input_event(
 
     map_conf: Res<MapConfig>,
     user_key_assoc: Res<UsernameKeyAssociation>,
+    key_id_assoc: Res<KeyIdAssociation>,
     key_units_assoc: Res<KeyUnitsAssociation>,
     main_room: Res<MainRoom>,
 ) {
@@ -68,7 +71,7 @@ pub fn receive_input_event(
                     }
 
                     PlayerInputVariant::EndTurn => {
-                        turn_tracker.next(&mut server, &user_key_assoc);
+                        turn_tracker.next(&mut server, &user_key_assoc, &key_id_assoc);
                     }
                 }
             }

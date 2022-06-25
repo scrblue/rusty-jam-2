@@ -5,14 +5,26 @@ use naia_bevy_server::{
 };
 
 use rgj_shared::{
-    protocol::{ClientKeepAlive, Protocol, WaitingOnPlayers},
+    components::players::PlayerId,
+    protocol::{
+        ClientConnected, ClientKeepAlive, Protocol, ReceiveChat, SendChat, WaitingOnPlayers,
+    },
     Channels,
 };
 
 use crate::{
-    resources::{MainRoom, UsernameKeyAssociation},
+    resources::{KeyIdAssociation, MainRoom, UsernameKeyAssociation},
     Args,
 };
+
+pub const ID_ORDER: &[PlayerId] = &[
+    PlayerId::Red,
+    PlayerId::Blue,
+    PlayerId::Yellow,
+    PlayerId::Green,
+    PlayerId::Purple,
+    PlayerId::Orange,
+];
 
 pub fn authorization_event(
     mut event_reader: EventReader<AuthorizationEvent<Protocol>>,
@@ -50,7 +62,8 @@ pub fn connection_event<'world, 'state>(
     mut server: Server<'world, 'state, Protocol, Channels>,
 
     main_room: Res<MainRoom>,
-    association: Res<UsernameKeyAssociation>,
+    username_key_assoc: Res<UsernameKeyAssociation>,
+    mut key_id_assoc: ResMut<KeyIdAssociation>,
 ) {
     for ConnectionEvent(user_key) in event_reader.iter() {
         let address = server
@@ -58,7 +71,7 @@ pub fn connection_event<'world, 'state>(
             .enter_room(&main_room.key)
             .address();
 
-        let username = association.get_from_key(user_key).unwrap();
+        let username = username_key_assoc.get_from_key(user_key).unwrap();
         info!("Formed connection with {} on {}", username, address);
 
         let _entity = server
@@ -72,6 +85,17 @@ pub fn connection_event<'world, 'state>(
             Channels::WaitingOnPlayers,
             &WaitingOnPlayers::new_complete(0),
         );
+
+        // TODO: Ensure that PlayerId's don't mess up if multiple players connect on the same tick
+        for key in server.user_keys() {
+            server.send_message(
+                &key,
+                Channels::GameNotification,
+                &ClientConnected::new(username.clone(), ID_ORDER[server.users_count() - 1]),
+            );
+
+            key_id_assoc.insert(key, ID_ORDER[server.users_count() - 1]);
+        }
     }
 }
 
@@ -86,8 +110,26 @@ pub fn disconnection_event(
     }
 }
 
-pub fn receive_message_event(mut event_reader: EventReader<MessageEvent<Protocol, Channels>>) {
-    for _ in event_reader.iter() {
-        // Simply reads and discards ClientKeepAlive events
+pub fn receive_message_event(
+    mut server: Server<Protocol, Channels>,
+
+    mut event_reader: EventReader<MessageEvent<Protocol, Channels>>,
+
+    key_id_assoc: Res<KeyIdAssociation>,
+) {
+    for event in event_reader.iter() {
+        if let MessageEvent(user_key, Channels::Chat, Protocol::SendChat(SendChat { message })) =
+            event
+        {
+            let id = key_id_assoc.get_from_key(&user_key).unwrap();
+
+            for key in server.user_keys() {
+                server.send_message(
+                    &key,
+                    Channels::Chat,
+                    &ReceiveChat::new(Some(*id), message.to_string()),
+                );
+            }
+        }
     }
 }

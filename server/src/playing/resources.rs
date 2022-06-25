@@ -9,7 +9,7 @@ use rgj_shared::{
     Channels,
 };
 
-use crate::resources::UsernameKeyAssociation;
+use crate::resources::{KeyIdAssociation, UsernameKeyAssociation};
 
 /// Tracks the current moving unit so that it walks along the given path
 /// NOTE: This assumes the path has been verified as valid
@@ -26,7 +26,9 @@ pub struct TurnTracker {
 impl TurnTracker {
     pub fn new(
         mut server: Server<Protocol, Channels>,
+
         user_key_assoc: &UsernameKeyAssociation,
+        key_id_assoc: &KeyIdAssociation,
 
         mut players: VecDeque<UserKey>,
         turn_timers: Option<Duration>,
@@ -47,6 +49,7 @@ impl TurnTracker {
                     Channels::GameNotification,
                     &GameStartNotification::new_complete(WhoseTurn::Player(
                         user_key_assoc.get_from_key(&player).unwrap().to_owned(),
+                        *key_id_assoc.get_from_key(&player).unwrap(),
                     )),
                 );
             }
@@ -66,6 +69,7 @@ impl TurnTracker {
         &mut self,
         server: &mut Server<Protocol, Channels>,
         user_key_assoc: &UsernameKeyAssociation,
+        key_id_assoc: &KeyIdAssociation,
     ) {
         let player = self.players.pop_front().unwrap();
         self.players.push_back(player);
@@ -85,6 +89,7 @@ impl TurnTracker {
                     Channels::GameNotification,
                     &TurnChangeNotification::new_complete(WhoseTurn::Player(
                         user_key_assoc.get_from_key(&player).unwrap().to_owned(),
+                        *key_id_assoc.get_from_key(&player).unwrap(),
                     )),
                 );
             }

@@ -4,7 +4,9 @@ use naia_bevy_server::Server;
 use rgj_shared::{
     behavior::AxialCoordinates,
     protocol::{
-        map_sync::{index_to_tile_qrz, tile_qrz_to_index, TileStructure, TileType, MAP_HEIGHT},
+        game_sync::map_sync::{
+            index_to_tile_qrz, tile_qrz_to_index, TileStructure, TileType, MAP_HEIGHT,
+        },
         notifications::{game_start::GameStartNotification, WhoseTurn},
         MapSync, Protocol, UnitSync,
     },
@@ -14,7 +16,9 @@ use rgj_shared::{
 
 use crate::{
     components::TileMap,
-    resources::{KeyMapAssociation, KeyUnitsAssociation, MainRoom, UsernameKeyAssociation},
+    resources::{
+        KeyIdAssociation, KeyMapAssociation, KeyUnitsAssociation, MainRoom, UsernameKeyAssociation,
+    },
 };
 
 pub mod events;
@@ -25,10 +29,12 @@ use resources::{TurnTracker, UnitMoveInformation};
 pub fn init(
     mut commands: Commands,
     server: Server<Protocol, Channels>,
+
     user_key_assoc: Res<UsernameKeyAssociation>,
+    key_id_assoc: Res<KeyIdAssociation>,
 ) {
     let keys = server.user_keys().into_iter().collect();
-    let turn_tracker = TurnTracker::new(server, &user_key_assoc, keys, None);
+    let turn_tracker = TurnTracker::new(server, &user_key_assoc, &key_id_assoc, keys, None);
     commands.insert_resource(turn_tracker);
     commands.insert_resource(UnitMoveInformation(None));
 }

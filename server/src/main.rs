@@ -1,6 +1,6 @@
 use std::{net::SocketAddr, path::PathBuf};
 
-use bevy::{log::LogPlugin, prelude::*, utils::tracing::instrument::WithSubscriber};
+use bevy::{log::LogPlugin, prelude::*};
 use clap::{Parser, Subcommand};
 use iyes_loopless::prelude::*;
 use naia_bevy_server::{Plugin as ServerPlugin, ServerConfig, Stage};
@@ -20,6 +20,9 @@ use countdown::{events as countdown_events, init as countdown_init, tick as coun
 
 mod playing;
 use playing::{events as playing_events, init as playing_init, tick as playing_tick};
+
+const MAX_PLAYERS: u8 = 6;
+const MIN_PLAYERS: u8 = 2;
 
 #[derive(Parser)]
 pub struct Args {
@@ -47,6 +50,15 @@ pub enum GameState {
 }
 
 pub fn main() {
+    let args = Args::parse();
+
+    if args.num_players > MAX_PLAYERS || args.num_players < MIN_PLAYERS {
+        panic!(
+            "Number of players must be between {} and {}",
+            MIN_PLAYERS, MAX_PLAYERS
+        );
+    }
+
     App::default()
         // Basic ECS stuff
         .add_plugins(MinimalPlugins)
@@ -61,7 +73,7 @@ pub fn main() {
             shared_config(),
         ))
         // Insert resources
-        .insert_resource(Args::parse())
+        .insert_resource(args)
         .add_loopless_state(GameState::WaitingForConnections)
         // WaitingForConnections state
         .add_enter_system(GameState::WaitingForConnections, waiting_init)
