@@ -146,7 +146,6 @@ impl From<TileType> for Color {
 #[derive_serde]
 pub enum TileStructure {
     None,
-    City,
     GenomeFacility,
 }
 
@@ -156,7 +155,6 @@ impl TryFrom<char> for TileStructure {
         match value {
             '_' => Ok(TileStructure::None),
 
-            'c' => Ok(TileStructure::City),
             'g' => Ok(TileStructure::GenomeFacility),
 
             _ => Err(MapCharacterUnrecognized),
@@ -168,7 +166,6 @@ impl From<TileStructure> for Color {
     fn from(ty: TileStructure) -> Self {
         match ty {
             TileStructure::None => Color::NONE,
-            TileStructure::City => Color::DARK_GRAY,
             TileStructure::GenomeFacility => Color::SILVER,
         }
     }

@@ -255,9 +255,6 @@ pub fn display_info(
 
                 match *structure {
                     TileStructure::None => {}
-                    TileStructure::City => {
-                        ui.label("Guarding a city");
-                    }
                     TileStructure::GenomeFacility => {
                         ui.label("Guarding a genome facility");
                     }
@@ -304,9 +301,6 @@ pub fn display_info(
 
                 match *structure {
                     TileStructure::None => {}
-                    TileStructure::City => {
-                        ui.label("With a city");
-                    }
                     TileStructure::GenomeFacility => {
                         ui.label("With a genome facility");
                     }
