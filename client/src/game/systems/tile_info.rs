@@ -262,7 +262,6 @@ pub fn display_info(
                         building,
                     } => {
                         on_facility = true;
-
                         let building = match building {
                             Some(ConstructionStatus {
                                 building,

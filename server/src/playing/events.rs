@@ -1,3 +1,5 @@
+use std::ops::BitAnd;
+
 use bevy::prelude::*;
 use naia_bevy_server::{events::MessageEvent, Server, UserKey};
 
@@ -16,7 +18,7 @@ use rgj_shared::{
     Channels,
 };
 
-use super::resources::{KeyToUnlockedGenomesMap, TurnTracker, UnitMoveInformation};
+use super::resources::{KeyToUnlockedGenomesMap, ShouldUpdate, TurnTracker, UnitMoveInformation};
 use crate::{
     components::TileMap,
     resources::{
@@ -35,6 +37,7 @@ pub fn receive_input_event(
 
     mut turn_tracker: ResMut<TurnTracker>,
     mut move_information: ResMut<UnitMoveInformation>,
+    mut should_update: ResMut<ShouldUpdate>,
 
     map_conf: Res<MapConfig>,
     user_key_assoc: Res<UsernameKeyAssociation>,
@@ -108,18 +111,33 @@ pub fn receive_input_event(
                                     ref mut building, ..
                                 } = &mut *tile.structure
                                 {
+                                    let num_turns = if hybrid.head_type() == hybrid.body_type()
+                                        && hybrid.body_type() == hybrid.limbs_type()
+                                    {
+                                        2
+                                    } else if hybrid.head_type() == hybrid.body_type()
+                                        || hybrid.head_type() == hybrid.limbs_type()
+                                        || hybrid.body_type() == hybrid.limbs_type()
+                                    {
+                                        4
+                                    } else {
+                                        6
+                                    };
+
                                     let turn = WhoseTurn::Player {
                                         username: user_key_assoc
                                             .get_from_key(user_key)
                                             .unwrap()
                                             .to_owned(),
                                         id: key_id_assoc.get_from_key(user_key).unwrap().to_owned(),
-                                        turn_number: turn_tracker.turn_number + 1,
+                                        turn_number: turn_tracker.turn_number + num_turns,
                                     };
                                     *building = Some(ConstructionStatus {
                                         building: hybrid.clone(),
                                         finished_on: turn,
                                     });
+
+                                    should_update.0 = true;
                                 }
                             }
                         }

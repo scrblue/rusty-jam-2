@@ -114,3 +114,5 @@ impl TurnTracker {
 pub struct KeyToUnlockedGenomesMap {
     pub key_to_genomes: HashMap<UserKey, Vec<AnimalType>>,
 }
+
+pub struct ShouldUpdate(pub bool);

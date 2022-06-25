@@ -31,7 +31,7 @@ use crate::{
 pub mod events;
 
 pub mod resources;
-use resources::{KeyToUnlockedGenomesMap, TurnTracker, UnitMoveInformation};
+use resources::{KeyToUnlockedGenomesMap, ShouldUpdate, TurnTracker, UnitMoveInformation};
 
 pub fn init(
     mut commands: Commands,
@@ -51,6 +51,7 @@ pub fn init(
     }
 
     commands.insert_resource(KeyToUnlockedGenomesMap { key_to_genomes });
+    commands.insert_resource(ShouldUpdate(false));
 }
 
 pub fn tick(
@@ -62,6 +63,7 @@ pub fn tick(
 
     mut move_info: ResMut<UnitMoveInformation>,
     mut unlocked_genomes: ResMut<KeyToUnlockedGenomesMap>,
+    mut should_update: ResMut<ShouldUpdate>,
 
     map_config: Res<MapConfig>,
     main_room: Res<MainRoom>,
@@ -148,6 +150,7 @@ pub fn tick(
         std::mem::drop(unit_sync);
 
         if run_updates {
+            should_update.0 = false;
             let auth_map = &query_tilemap.get(main_room.map_entity).unwrap().children;
             // Updates tiles in view for every player
             for user_key in server.user_keys() {
@@ -211,6 +214,71 @@ pub fn tick(
                                         *subj_tile.tile_type = TileType::Fog;
                                         *subj_tile.structure = TileStructure::None;
                                     }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } else if should_update.0 {
+        // TODO: Don't Copy/Paste
+        should_update.0 = false;
+        let auth_map = &query_tilemap.get(main_room.map_entity).unwrap().children;
+        // Updates tiles in view for every player
+        for user_key in server.user_keys() {
+            if let Some(units) = key_units_assoc.get_from_key(user_key) {
+                // Build a list of hexes visible to any unit belonging to this player
+                let mut valid_qrs = Vec::new();
+                for unit in units {
+                    if let Ok(unit_sync) = query_units.get(*unit) {
+                        let viewing_distance = unit_sync.hybrid_type.head().viewing_distance as i32;
+                        let pos = *unit_sync.position;
+
+                        // Finds all tiles within viewing_distance
+                        for q_offset in -viewing_distance..=viewing_distance {
+                            for r_offset in
+                                std::cmp::max(-viewing_distance, -q_offset - viewing_distance)
+                                    ..=std::cmp::min(viewing_distance, -q_offset + viewing_distance)
+                            {
+                                let q = pos.column_q as i32 + q_offset;
+                                let r = pos.row_r as i32 + r_offset;
+
+                                if q >= 0 && r >= 0 && q <= i32::MAX.into() && r <= i32::MAX.into()
+                                {
+                                    valid_qrs.push(AxialCoordinates::new(q as i32, r as i32));
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // With the tiles in range of all units, update the subjective map
+                let subjective_map = &query_tilemap
+                    .get(*key_map_assoc.get_from_key(&user_key).unwrap())
+                    .unwrap()
+                    .children;
+
+                for z in 0..MAP_HEIGHT as i32 {
+                    for r in 0..map_config.size_height as i32 {
+                        for q in 0..map_config.size_width as i32 {
+                            let qr = AxialCoordinates::new(q, r);
+
+                            let [mut subj_tile, auth_tile] = query_tile
+                                .get_many_mut([
+                                    subjective_map
+                                        [TileMap::tile_qrz_to_index(&map_config, q, r, z)],
+                                    auth_map[TileMap::tile_qrz_to_index(&map_config, q, r, z)],
+                                ])
+                                .unwrap();
+
+                            if valid_qrs.contains(&qr) {
+                                *subj_tile.tile_type = *auth_tile.tile_type.clone();
+                                *subj_tile.structure = (*auth_tile.structure).clone();
+                            } else {
+                                if *subj_tile.tile_type != TileType::Fog {
+                                    *subj_tile.tile_type = TileType::Fog;
+                                    *subj_tile.structure = TileStructure::None;
                                 }
                             }
                         }
