@@ -21,14 +21,20 @@ pub use notifications::{game_start::GameStartNotification, turn_change::TurnChan
 pub mod game_sync;
 pub use game_sync::{map_sync::MapSync, unit_sync::UnitSync};
 
+pub mod chat;
+pub use chat::{receive_chat::ReceiveChat, send_chat::SendChat};
+
 #[derive(Protocolize)]
 pub enum Protocol {
     Identification(Identification),
     ClientKeepAlive(ClientKeepAlive),
+    SendChat(SendChat),
     PlayerInput(PlayerInput),
 
     WaitingOnPlayers(WaitingOnPlayers),
     Countdown(Countdown),
+
+	ReceiveChat(ReceiveChat),
 
     GameStartNotification(GameStartNotification),
     TurnChangeNotification(TurnChangeNotification),
