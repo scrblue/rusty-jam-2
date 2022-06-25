@@ -162,7 +162,7 @@ pub fn update_unit_component_event(
     mut event_reader: EventReader<UpdateComponentEvent<ProtocolKind>>,
 
     query_unit: Query<&UnitSync>,
-    mut query_local: Query<&mut GlobalTransform>,
+    mut query_local: Query<&mut Transform>,
 
     mut map: ResMut<Map>,
 ) {
@@ -191,7 +191,7 @@ pub fn update_unit_component_event(
                     }
                 };
 
-                let new = GlobalTransform::from_xyz(
+                let new = Transform::from_xyz(
                     HEXAGON_SIZE * (q as f32 * f32::sqrt(3.0) + (f32::sqrt(3.0) / 2.0 * r as f32)),
                     HEXAGON_SIZE * (r as f32 * 3.0 / 2.0),
                     0.9,

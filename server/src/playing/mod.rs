@@ -56,7 +56,6 @@ pub fn tick(
     if let Some((entity, ref mut path)) = &mut move_info.0 {
         let mut unit_sync = query_units.get_mut(*entity).unwrap();
 
-        error!("{:?}", path);
         let run_updates = match path.pop_front() {
             Some(next_stop) => {
                 // Process the move making sure to update
