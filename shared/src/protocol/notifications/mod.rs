@@ -9,6 +9,12 @@ pub mod turn_change;
 // TODO: move to components mod (and probably rename components)
 #[derive_serde]
 pub enum WhoseTurn {
-    Yours,
-    Player(String, PlayerId),
+    Yours {
+        turn_number: u16,
+    },
+    Player {
+        username: String,
+        id: PlayerId,
+        turn_number: u16,
+    },
 }
