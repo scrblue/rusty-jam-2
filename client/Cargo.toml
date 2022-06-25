@@ -17,10 +17,12 @@ dev = [
 [dependencies]
 bevy = { version = "0.7", default-features = true }
 bevy_asset_loader = { version = "0.11" }
-bevy_egui = "0.14"
-bevy_kira_audio = { version = "0.10" }
+bevy_egui = {version = "0.14", features = ["immutable_ctx"] }
+# bevy_inspector_egui = "0.11",
+bevy_kira_audio = { version = "0.10", features = ["wav"] }
 bevy_prototype_lyon = "0.5"
 iyes_loopless = "0.5"
+leafwing-input-manager = "0.3"
 naia-bevy-client = { git = "https://github.com/naia-lib/naia.git" }
 rand = "0.8.3"
 
@@ -31,3 +33,4 @@ winit = { version = "0.25", features=["x11"]}
 
 [build-dependencies]
 embed-resource = "1.4"
+wasm-bindgen-cli = "0.2"

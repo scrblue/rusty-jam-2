@@ -1,6 +1,7 @@
 pub mod behavior;
-pub mod resources;
+pub mod components;
 pub mod protocol;
+pub mod resources;
 
 mod channels;
 pub use channels::{Channels, CHANNEL_CONFIG};

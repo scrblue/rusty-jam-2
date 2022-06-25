@@ -5,11 +5,21 @@ use std::time::Duration;
 use bevy::prelude::*;
 use iyes_loopless::prelude::*;
 use naia_bevy_server::{Server, ServerAddrs};
+use rand::prelude::*;
 
 use rgj_shared::{
     behavior::AxialCoordinates,
+    components::{
+        genome::{
+            self, CHICKEN, DEER, ELECTRIC_EEL, ELEPHANT, RATTLESNAKE, SAILFISH, VAMPIRE_BAT,
+            VULTURE, WHALE,
+        },
+        players::PlayerId,
+    },
     protocol::{
-        map_sync::{MapSync, TileType, MAP_HEIGHT},
+        game_sync::map_sync::{
+            MapCharacterUnrecognized, MapSync, TileStructure, TileType, MAP_HEIGHT,
+        },
         Protocol, WaitingOnPlayers,
     },
     resources::MapConfig,
@@ -19,58 +29,226 @@ use rgj_shared::{
 use crate::{
     components::{AuthoritativeTileMap, TileMap},
     countdown::resources::{Countdown, TimeSinceLastCount},
-    resources::{KeyMapAssociation, MainRoom, UsernameKeyAssociation},
-    Args, GameState,
+    resources::{
+        KeyIdAssociation, KeyMapAssociation, KeyUnitsAssociation, MainRoom, UsernameKeyAssociation,
+    },
+    Args, GameState, MapOption,
 };
 
 pub mod events;
+
+fn init_tile(
+    commands: &mut Commands,
+    q: i32,
+    r: i32,
+    z: i32,
+    tile: TileType,
+    structure: TileStructure,
+) -> Entity {
+    commands
+        .spawn()
+        .insert(MapSync::new_complete(
+            AxialCoordinates::new(q, r),
+            z,
+            tile,
+            structure,
+        ))
+        .id()
+}
 
 /// Initialization system
 pub fn init(mut commands: Commands, mut server: Server<Protocol, Channels>, args: Res<Args>) {
     info!("Server running -- awaiting connections");
 
-    // Build AuthoritativeTileMap
-    let mut auth_map_entities =
-        Vec::with_capacity(args.map_size_x as usize * args.map_size_y as usize * 2);
+    let main_room_key = server.make_room().key();
+    match &args.map_option {
+        MapOption::Generate { size_x, size_y } => {
+            let size_x = *size_x;
+            let size_y = *size_y;
 
-    // TODO: Procedurally generate
-    for z in 0..MAP_HEIGHT {
-        for r in 0..args.map_size_y {
-            for q in 0..args.map_size_x {
-                if z == 1 {
-                    auth_map_entities.push(
-                        commands
-                            .spawn()
-                            .insert(MapSync::new_complete(
-                                AxialCoordinates::new(q, r),
+            // Build AuthoritativeTileMap
+            let mut auth_map_entities = Vec::with_capacity(size_x as usize * size_y as usize * 2);
+
+            // TODO: Procedurally generate
+            for z in 0..MAP_HEIGHT as i32 {
+                for r in 0..size_y as i32 {
+                    for q in 0..size_x as i32 {
+                        if z == 1 {
+                            auth_map_entities.push(init_tile(
+                                &mut commands,
+                                q,
+                                r,
                                 z,
                                 TileType::ClearSky,
-                            ))
-                            .id(),
-                    );
-                } else {
-                    auth_map_entities.push(
-                        commands
-                            .spawn()
-                            .insert(MapSync::new_complete(
-                                AxialCoordinates::new(q, r),
+                                TileStructure::None,
+                            ));
+                        } else {
+                            auth_map_entities.push(init_tile(
+                                &mut commands,
+                                q,
+                                r,
                                 z,
                                 TileType::Ocean,
-                            ))
-                            .id(),
-                    );
+                                TileStructure::None,
+                            ));
+                        }
+                    }
                 }
             }
+
+            let auth_map = commands
+                .spawn()
+                .insert(AuthoritativeTileMap)
+                .insert(TileMap {
+                    children: auth_map_entities,
+                })
+                .id();
+
+            commands.insert_resource(MainRoom {
+                key: main_room_key,
+                map_entity: auth_map,
+            });
+
+            commands.insert_resource(MapConfig {
+                size_width: size_x,
+                size_height: size_y,
+            });
+        }
+
+        MapOption::Load { file_path } => {
+            let file_string = std::fs::read_to_string(file_path).expect("Given map invalid");
+
+            let mut auth_map_entities = Vec::with_capacity(file_string.chars().count() * 2 / 3);
+
+            // Will be the length of each line
+            let mut x_size = 0;
+
+            // Scan through for validity
+            let mut char_count_for_line = 0;
+            let mut line_count = 0;
+            for c in file_string.chars() {
+                match c {
+                    '\n' => {
+                        // If X_size hasn't been set, set it to the char_count_for_line for the
+                        // first nonempty line, otherwise ensure lines are equal in length and panic
+                        // otherwise
+                        if x_size == 0 {
+                            x_size = char_count_for_line;
+                        } else if x_size != char_count_for_line {
+                            panic!("Given map's lines must be equal in length")
+                        }
+
+                        char_count_for_line = 0;
+                        line_count += 1;
+                    }
+
+                    _ => {
+                        char_count_for_line += 1;
+                    }
+                }
+            }
+
+            if line_count % 3 != 0 {
+                panic!("Given map must havea number of lines divisible by three")
+            }
+
+            let y_size = line_count / 3;
+
+            // Read the tiles from the ground and air layers
+            let tiles = file_string
+                .chars()
+                .filter(|c| *c != '\n')
+                .take(y_size * 2 * x_size)
+                .map(TryInto::try_into)
+                .collect::<Result<Vec<TileType>, _>>()
+                .expect("Unrecognized character");
+
+            let mut genomes = vec![
+                VAMPIRE_BAT.clone(),
+                CHICKEN.clone(),
+                ELECTRIC_EEL.clone(),
+                ELEPHANT.clone(),
+                RATTLESNAKE.clone(),
+                SAILFISH.clone(),
+                VULTURE.clone(),
+                WHALE.clone(),
+            ];
+
+            genomes.shuffle(&mut rand::thread_rng());
+
+            let mut genomes = genomes.into_iter();
+
+            // Then read structures from the remaining layer
+            let structures = file_string
+                .chars()
+                .filter(|c| *c != '\n')
+                .skip(y_size * 2 * x_size)
+                .map(|c| match c {
+                    '_' => Ok(TileStructure::None),
+                    'g' => {
+                        let genome = genomes
+                            .next()
+                            .expect("Map expects exactly eight genome facilities");
+
+                        Ok(TileStructure::GenomeFacility {
+                            unique_genome: genome,
+                            building: None,
+                        })
+                    }
+                    _ => Err(MapCharacterUnrecognized),
+                })
+                .collect::<Result<Vec<TileStructure>, _>>()
+                .expect("Unrecognized character");
+
+            if structures
+                .iter()
+                .filter(|t| matches!(t, TileStructure::GenomeFacility { .. }))
+                .count()
+                != 8
+            {
+                panic!(
+                    "Map expects exactly eight genome facilities, has {}",
+                    structures.len()
+                );
+            }
+
+            // Consume them one by one filling the Vec
+            let mut tiles = tiles.into_iter();
+            let mut structures = structures.into_iter();
+            for z in 0..MAP_HEIGHT {
+                for r in 0..y_size {
+                    for q in 0..x_size {
+                        auth_map_entities.push(init_tile(
+                            &mut commands,
+                            q as i32,
+                            r as i32,
+                            z as i32,
+                            tiles.next().unwrap(),
+                            structures.next().unwrap_or(TileStructure::None),
+                        ));
+                    }
+                }
+            }
+
+            let auth_map = commands
+                .spawn()
+                .insert(AuthoritativeTileMap)
+                .insert(TileMap {
+                    children: auth_map_entities,
+                })
+                .id();
+
+            commands.insert_resource(MainRoom {
+                key: main_room_key,
+                map_entity: auth_map,
+            });
+
+            commands.insert_resource(MapConfig {
+                size_width: x_size as u16,
+                size_height: y_size as u16,
+            });
         }
     }
-
-    let auth_map = commands
-        .spawn()
-        .insert(AuthoritativeTileMap)
-        .insert(TileMap {
-            children: auth_map_entities,
-        })
-        .id();
 
     let server_addresses = ServerAddrs::new(
         args.bind_udp,
@@ -79,14 +257,10 @@ pub fn init(mut commands: Commands, mut server: Server<Protocol, Channels>, args
     );
     server.listen(&server_addresses);
 
-    let main_room_key = server.make_room().key();
-    commands.insert_resource(MainRoom {
-        key: main_room_key,
-        map_entity: auth_map,
-    });
-
     commands.insert_resource(UsernameKeyAssociation::new());
     commands.insert_resource(KeyMapAssociation::new());
+    commands.insert_resource(KeyUnitsAssociation::new());
+    commands.insert_resource(KeyIdAssociation::new());
 }
 
 /// The tick fn will simply wait for the number of players to equal the configured, then enter the
@@ -98,7 +272,7 @@ pub fn tick(mut commands: Commands, mut server: Server<Protocol, Channels>, args
         commands.insert_resource(NextState(GameState::Countdown));
 
         // Insert resources needed for next state
-        commands.insert_resource(Countdown(10));
+        commands.insert_resource(Countdown(3));
         commands.insert_resource(TimeSinceLastCount(Duration::from_secs(0)));
     }
 

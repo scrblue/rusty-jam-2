@@ -2,6 +2,7 @@ use std::{net::SocketAddr, str::FromStr};
 
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContext};
+use bevy_kira_audio::Audio;
 use iyes_loopless::prelude::*;
 
 use crate::{ConnectionInformation, GameState};
@@ -26,6 +27,9 @@ pub fn connect_menu(
 
     mut egui_context: ResMut<EguiContext>,
     mut ui_state: ResMut<UiState>,
+
+    audio: Res<Audio>,
+    assets: Res<AssetServer>,
 ) {
     let mut clicked = false;
 
@@ -64,6 +68,9 @@ pub fn connect_menu(
                     room_password: ui_state.password.clone(),
                 });
                 commands.insert_resource(NextState(GameState::WaitingForMoreConnectionsMenu));
+
+                audio.play_looped(assets.load("music/game2.wav"));
+                audio.resume();
             }
             Err(e) => ui_state.error_msg = e.to_string(),
         }

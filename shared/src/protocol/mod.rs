@@ -17,24 +17,33 @@ pub use countdown::Countdown;
 
 pub mod notifications;
 pub use notifications::{
-	game_start::GameStartNotification,
-	turn_change::TurnChangeNotification,
+    client_connected::ClientConnected, game_start::GameStartNotification,
+    genome_status_change::GenomeStatusChange, turn_change::TurnChangeNotification,
 };
 
-pub mod map_sync;
-pub use map_sync::MapSync;
+pub mod game_sync;
+pub use game_sync::{map_sync::MapSync, unit_sync::UnitSync};
+
+pub mod chat;
+pub use chat::{receive_chat::ReceiveChat, send_chat::SendChat};
 
 #[derive(Protocolize)]
 pub enum Protocol {
     Identification(Identification),
     ClientKeepAlive(ClientKeepAlive),
+    SendChat(SendChat),
     PlayerInput(PlayerInput),
 
     WaitingOnPlayers(WaitingOnPlayers),
+    ClientConnected(ClientConnected),
     Countdown(Countdown),
 
-	GameStartNotification(GameStartNotification),
-	TurnChangeNotification(TurnChangeNotification),
+    ReceiveChat(ReceiveChat),
+
+    GameStartNotification(GameStartNotification),
+    GenomeStatusChange(GenomeStatusChange),
+    TurnChangeNotification(TurnChangeNotification),
 
     MapSync(MapSync),
+    UnitSync(UnitSync),
 }

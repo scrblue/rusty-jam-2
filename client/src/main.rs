@@ -1,17 +1,24 @@
 // disable console on windows for release builds
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use bevy::{prelude::*, utils::tracing::instrument::WithSubscriber};
+use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
+use bevy_kira_audio::{Audio, AudioPlugin};
 use bevy_prototype_lyon::prelude::ShapePlugin;
 use iyes_loopless::prelude::*;
+
+use leafwing_input_manager::prelude::*;
+
 use naia_bevy_client::{ClientConfig, Plugin as ClientPlugin, Stage};
 
 use rgj_shared::{protocol::Protocol, shared_config, Channels};
 
 use rgj_client::{
-    connect_menu, countdown_menu::systems as countdown_systems, game::systems as game_systems,
-    waiting_for_more_connections_menu::systems as waiting_systems, GameState,
+    common_systems, connect_menu,
+    countdown_menu::systems as countdown_systems,
+    game::{resources::TileSelectedEvent, systems as game_systems},
+    waiting_for_more_connections_menu::systems as waiting_systems,
+    GameState,
 };
 
 fn main() {
@@ -21,11 +28,27 @@ fn main() {
         .insert_resource(WindowDescriptor {
             width: 800.,
             height: 600.,
-            title: "Bevy game".to_string(), // ToDo
+            title: "Rusty Science".to_string(), // ToDo
             ..Default::default()
         })
+        .add_event::<TileSelectedEvent>()
         .add_plugins(DefaultPlugins)
         .add_plugin(EguiPlugin)
+        .add_plugin(AudioPlugin)
+        // .insert_resource(WorldInspectorParams {
+        //     despawnable_entities: true,
+        //     highlight_changes: true,
+        //     ..Default::default()
+        // })
+        // .add_plugin(WorldInspectorPlugin::new())
+        // .add_plugin(InspectorPlugin::<Resources>::new())
+        // // registers the type in the `bevy_reflect` machinery,
+        // // so that even without implementing `Inspectable` we can display the struct fields
+        // .register_type::<OrthographicProjection>()
+        // This plugin maps inputs to an input-type agnostic action-state
+        // We need to provide it with an enum which stores the possible actions a player could take
+        .add_plugin(InputManagerPlugin::<game_systems::input::Action>::default())
+        // XXX The InputMap and ActionState components will be added to any entity with the Player component
         .add_plugin(ClientPlugin::<Protocol, Channels>::new(
             ClientConfig::default(),
             shared_config(),
@@ -67,7 +90,8 @@ fn main() {
                 // Countdown state before sending the first countdown. This is a workaround to make
                 // sure that entities still spawn while this happens
                 .with_system(countdown_systems::spawn_entity_event)
-                .with_system(countdown_systems::insert_component_event)
+                .with_system(countdown_systems::insert_map_sync_event)
+                .with_system(common_systems::insert_unit_sync_event)
                 .with_system(waiting_systems::receive_waiting_on_players_message)
                 .with_system(waiting_systems::receive_countdown_message)
                 .into(),
@@ -93,7 +117,8 @@ fn main() {
             ConditionSet::new()
                 .run_in_state(GameState::CountdownMenu)
                 .with_system(countdown_systems::spawn_entity_event)
-                .with_system(countdown_systems::insert_component_event)
+                .with_system(countdown_systems::insert_map_sync_event)
+                .with_system(common_systems::insert_unit_sync_event)
                 .with_system(countdown_systems::receive_countdown_message)
                 .with_system(countdown_systems::receive_game_start_notification)
                 .into(),
@@ -116,8 +141,11 @@ fn main() {
             Stage::ReceiveEvents,
             ConditionSet::new()
                 .run_in_state(GameState::Game)
-                .with_system(game_systems::update_component_event)
+                .with_system(game_systems::update_map_component_event)
+                .with_system(game_systems::update_unit_component_event)
+                .with_system(common_systems::insert_unit_sync_event)
                 .with_system(game_systems::receive_turn_change_notification)
+                .with_system(game_systems::receive_genome_status_change_notification)
                 .into(),
         )
         .add_system_set_to_stage(
@@ -125,9 +153,12 @@ fn main() {
             ConditionSet::new()
                 .run_in_state(GameState::Game)
                 .with_system(game_systems::game_menu)
-                .with_system(game_systems::input::select_tile_monitor)
-                .with_system(game_systems::input::camera_system)
+                .with_system(game_systems::input::pan_camera_system)
+                .with_system(game_systems::input::zoom_camera_system)
+                .with_system(game_systems::input::select_entity)
+                .with_system(game_systems::tile_info::display_info)
                 .into(),
         )
+        .add_enter_system(GameState::Game, game_systems::spawn_player)
         .run();
 }
