@@ -133,7 +133,7 @@ lazy_static! {
 
     // Elephants are the body-oriented ground-type
     pub static ref ELEPHANT: AnimalType = AnimalType {
-        name: "Elephants".to_owned(),
+        name: "Elephant".to_owned(),
         head: HeadStats {
             attack_damage: 12,
             viewing_distance: 4,
@@ -269,6 +269,7 @@ impl Hybrid {
     }
 }
 
+#[derive(Debug)]
 #[derive_serde]
 pub struct AnimalType {
     pub name: String,
@@ -277,7 +278,7 @@ pub struct AnimalType {
     pub limbs: LimbStats,
 }
 
-#[derive(Copy)]
+#[derive(Copy, Debug, Eq)]
 #[derive_serde]
 pub struct HeadStats {
     pub attack_damage: u16,
@@ -285,7 +286,7 @@ pub struct HeadStats {
     pub smarts: u16,
 }
 
-#[derive(Copy)]
+#[derive(Copy, Debug)]
 #[derive_serde]
 pub struct BodyStats {
     pub health: u16,
@@ -293,7 +294,7 @@ pub struct BodyStats {
     pub size_penalty: f32,
 }
 
-#[derive(Copy)]
+#[derive(Copy, Debug, Eq)]
 #[derive_serde]
 pub struct LimbStats {
     pub terrain_a: TerrainMovementStats,
@@ -302,7 +303,7 @@ pub struct LimbStats {
     pub terrain_b: Option<TerrainMovementStats>,
 }
 
-#[derive(Copy)]
+#[derive(Copy, Debug, Eq)]
 #[derive_serde]
 pub struct TerrainMovementStats {
     pub terrain_type: TerrainType,
@@ -310,7 +311,7 @@ pub struct TerrainMovementStats {
 }
 
 // TODO: Organize these components better. [`TerrainType`] should be elsewhere
-#[derive(Copy)]
+#[derive(Copy, Debug, Eq)]
 #[derive_serde]
 pub enum TerrainType {
     Ground,

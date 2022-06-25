@@ -123,7 +123,7 @@ pub fn update_map_component_event(
                     if let Ok(transform) = query_translate.get(*entity) {
                         let mut transform = transform.clone();
 
-                        let color: Color = (*map_sync.structure).into();
+                        let color: Color = (&*map_sync.structure).into();
                         transform.translation.z += 0.1;
 
                         let structure_entity = commands

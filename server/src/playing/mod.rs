@@ -130,7 +130,7 @@ pub fn tick(
 
                                 if valid_qrs.contains(&qr) {
                                     *subj_tile.tile_type = *auth_tile.tile_type.clone();
-                                    *subj_tile.structure = *auth_tile.structure.clone();
+                                    *subj_tile.structure = (*auth_tile.structure).clone();
                                 } else {
                                     if *subj_tile.tile_type != TileType::Fog {
                                         *subj_tile.tile_type = TileType::Fog;

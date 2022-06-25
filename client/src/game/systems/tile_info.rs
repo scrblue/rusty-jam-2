@@ -253,10 +253,13 @@ pub fn display_info(
                     ui.label((*tile_type).to_string());
                 });
 
-                match *structure {
+                match &*structure {
                     TileStructure::None => {}
-                    TileStructure::GenomeFacility => {
-                        ui.label("Guarding a genome facility");
+                    TileStructure::GenomeFacility { unique_genome } => {
+                        ui.label(format!(
+                            "Guarding a genome facility containing {} genome",
+                            unique_genome.name
+                        ));
                     }
                 }
 
@@ -299,10 +302,13 @@ pub fn display_info(
                     ui.label((*tile_type).to_string());
                 });
 
-                match *structure {
+                match &*structure {
                     TileStructure::None => {}
-                    TileStructure::GenomeFacility => {
-                        ui.label("With a genome facility");
+                    TileStructure::GenomeFacility { unique_genome } => {
+                        ui.label(format!(
+                            "With a genome facility containing {} genome",
+                            unique_genome.name
+                        ));
                     }
                 }
             });

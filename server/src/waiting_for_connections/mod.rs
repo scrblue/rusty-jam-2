@@ -5,12 +5,21 @@ use std::time::Duration;
 use bevy::prelude::*;
 use iyes_loopless::prelude::*;
 use naia_bevy_server::{Server, ServerAddrs};
+use rand::prelude::*;
 
 use rgj_shared::{
     behavior::AxialCoordinates,
-    components::players::PlayerId,
+    components::{
+        genome::{
+            self, CHICKEN, DEER, ELECTRIC_EEL, ELEPHANT, RATTLESNAKE, SAILFISH, VAMPIRE_BAT,
+            VULTURE, WHALE,
+        },
+        players::PlayerId,
+    },
     protocol::{
-        game_sync::map_sync::{MapSync, TileStructure, TileType, MAP_HEIGHT},
+        game_sync::map_sync::{
+            MapCharacterUnrecognized, MapSync, TileStructure, TileType, MAP_HEIGHT,
+        },
         Protocol, WaitingOnPlayers,
     },
     resources::MapConfig,
@@ -154,14 +163,53 @@ pub fn init(mut commands: Commands, mut server: Server<Protocol, Channels>, args
                 .collect::<Result<Vec<TileType>, _>>()
                 .expect("Unrecognized character");
 
+            let mut genomes = vec![
+                VAMPIRE_BAT.clone(),
+                CHICKEN.clone(),
+                ELECTRIC_EEL.clone(),
+                ELEPHANT.clone(),
+                RATTLESNAKE.clone(),
+                SAILFISH.clone(),
+                VULTURE.clone(),
+                WHALE.clone(),
+            ];
+
+            genomes.shuffle(&mut rand::thread_rng());
+
+            let mut genomes = genomes.into_iter();
+
             // Then read structures from the remaining layer
             let structures = file_string
                 .chars()
                 .filter(|c| *c != '\n')
                 .skip(y_size * 2 * x_size)
-                .map(TryInto::try_into)
+                .map(|c| match c {
+                    '_' => Ok(TileStructure::None),
+                    'g' => {
+                        let genome = genomes
+                            .next()
+                            .expect("Map expects exactly eight genome facilities");
+
+                        Ok(TileStructure::GenomeFacility {
+                            unique_genome: genome,
+                        })
+                    }
+                    _ => Err(MapCharacterUnrecognized),
+                })
                 .collect::<Result<Vec<TileStructure>, _>>()
                 .expect("Unrecognized character");
+
+            if structures
+                .iter()
+                .filter(|t| matches!(t, TileStructure::GenomeFacility { .. }))
+                .count()
+                != 8
+            {
+                panic!(
+                    "Map expects exactly eight genome facilities, has {}",
+                    structures.len()
+                );
+            }
 
             // Consume them one by one filling the Vec
             let mut tiles = tiles.into_iter();

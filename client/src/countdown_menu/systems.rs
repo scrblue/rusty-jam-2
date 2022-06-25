@@ -86,7 +86,7 @@ pub fn insert_map_sync_event(
 
                 // Insert the building if there is one
                 if *map_sync.structure != TileStructure::None {
-                    let color: Color = (*map_sync.structure).into();
+                    let color: Color = (&*map_sync.structure).into();
                     transform.translation.z += 0.1;
 
                     let structure_entity = commands

@@ -4,7 +4,7 @@ use bevy::prelude::{Color, Component};
 use naia_shared::{derive_serde, serde, Property, Replicate};
 use thiserror::Error;
 
-use crate::{behavior::AxialCoordinates, resources::MapConfig};
+use crate::{behavior::AxialCoordinates, components::genome::AnimalType, resources::MapConfig};
 
 /// Represents the two layers, ground and air levels
 pub const MAP_HEIGHT: i32 = 2;
@@ -142,31 +142,18 @@ impl From<TileType> for Color {
     }
 }
 
-#[derive(Copy, Debug, Eq)]
+#[derive(Debug)]
 #[derive_serde]
 pub enum TileStructure {
     None,
-    GenomeFacility,
+    GenomeFacility { unique_genome: AnimalType },
 }
 
-impl TryFrom<char> for TileStructure {
-    type Error = MapCharacterUnrecognized;
-    fn try_from(value: char) -> Result<Self, Self::Error> {
-        match value {
-            '_' => Ok(TileStructure::None),
-
-            'g' => Ok(TileStructure::GenomeFacility),
-
-            _ => Err(MapCharacterUnrecognized),
-        }
-    }
-}
-
-impl From<TileStructure> for Color {
-    fn from(ty: TileStructure) -> Self {
+impl From<&TileStructure> for Color {
+    fn from(ty: &TileStructure) -> Self {
         match ty {
             TileStructure::None => Color::NONE,
-            TileStructure::GenomeFacility => Color::SILVER,
+            TileStructure::GenomeFacility { .. } => Color::SILVER,
         }
     }
 }
