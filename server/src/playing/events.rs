@@ -73,6 +73,10 @@ pub fn receive_input_event(
                     PlayerInputVariant::EndTurn => {
                         turn_tracker.next(&mut server, &user_key_assoc, &key_id_assoc);
                     }
+
+                    PlayerInputVariant::BuildHybrid(_pos, hybrid) => {
+                        error!("Player wants to build {}", hybrid.name());
+                    }
                 }
             }
         }

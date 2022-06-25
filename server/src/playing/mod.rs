@@ -1,8 +1,11 @@
-use bevy::{ecs::query, prelude::*};
+use std::collections::HashMap;
+
+use bevy::{ecs::query, prelude::*, reflect::List};
 use naia_bevy_server::Server;
 
 use rgj_shared::{
     behavior::AxialCoordinates,
+    components::genome::DEER,
     protocol::{
         game_sync::map_sync::{
             index_to_tile_qrz, tile_qrz_to_index, TileStructure, TileType, MAP_HEIGHT,
@@ -24,19 +27,26 @@ use crate::{
 pub mod events;
 
 pub mod resources;
-use resources::{TurnTracker, UnitMoveInformation};
+use resources::{KeyToUnlockedGenomesMap, TurnTracker, UnitMoveInformation};
 
 pub fn init(
     mut commands: Commands,
-    server: Server<Protocol, Channels>,
+    mut server: Server<Protocol, Channels>,
 
     user_key_assoc: Res<UsernameKeyAssociation>,
     key_id_assoc: Res<KeyIdAssociation>,
 ) {
     let keys = server.user_keys().into_iter().collect();
-    let turn_tracker = TurnTracker::new(server, &user_key_assoc, &key_id_assoc, keys, None);
+    let turn_tracker = TurnTracker::new(&mut server, &user_key_assoc, &key_id_assoc, keys, None);
     commands.insert_resource(turn_tracker);
     commands.insert_resource(UnitMoveInformation(None));
+
+    let mut key_to_genomes = HashMap::new();
+    for key in server.user_keys() {
+        key_to_genomes.insert(key, vec![DEER.clone()]);
+    }
+
+    commands.insert_resource(KeyToUnlockedGenomesMap { key_to_genomes });
 }
 
 pub fn tick(
@@ -47,6 +57,7 @@ pub fn tick(
     mut query_units: Query<&mut UnitSync>,
 
     mut move_info: ResMut<UnitMoveInformation>,
+    mut unlocked_genomes: ResMut<KeyToUnlockedGenomesMap>,
 
     map_config: Res<MapConfig>,
     main_room: Res<MainRoom>,
@@ -58,6 +69,51 @@ pub fn tick(
 
         let run_updates = match path.pop_front() {
             Some(next_stop) => {
+                // If the current position is a genome facility and you're moving off it, then you
+                // should no longer have that genome unlockd
+                let auth_map = &query_tilemap.get(main_room.map_entity).unwrap().children;
+                let auth_tile_old = query_tile
+                    .get(
+                        auth_map[tile_qrz_to_index(
+                            &map_config,
+                            unit_sync.position.column_q,
+                            unit_sync.position.row_r,
+                            0,
+                        )],
+                    )
+                    .unwrap();
+
+                if let TileStructure::GenomeFacility { unique_genome } = &*auth_tile_old.structure {
+                    let key = key_units_assoc.get_from_entity(*entity).unwrap();
+                    let genomes = unlocked_genomes.key_to_genomes.get_mut(key).unwrap();
+
+                    error!("Removing {}", unique_genome.name);
+                    *genomes = genomes
+                        .drain(..)
+                        .filter(|elem| elem != unique_genome)
+                        .collect();
+                }
+
+                // And if the new position is a genome facility that you're moving onto, then it
+                // shoulld be added
+                let auth_tile_new = query_tile
+                    .get(
+                        auth_map[tile_qrz_to_index(
+                            &map_config,
+                            next_stop.column_q,
+                            next_stop.row_r,
+                            0,
+                        )],
+                    )
+                    .unwrap();
+
+                if let TileStructure::GenomeFacility { unique_genome } = &*auth_tile_new.structure {
+                    let key = key_units_assoc.get_from_entity(*entity).unwrap();
+                    let genomes = unlocked_genomes.key_to_genomes.get_mut(key).unwrap();
+                    error!("Adding {}", unique_genome.name);
+                    genomes.push(unique_genome.clone());
+                }
+
                 // Process the move making sure to update
                 *unit_sync.position = next_stop;
                 move_info.0 = None;

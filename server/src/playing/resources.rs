@@ -1,10 +1,14 @@
-use std::{collections::VecDeque, time::Duration};
+use std::{
+    collections::{HashMap, HashSet, VecDeque},
+    time::Duration,
+};
 
 use bevy::prelude::*;
 use naia_bevy_server::{Server, UserKey};
 
 use rgj_shared::{
     behavior::AxialCoordinates,
+    components::genome::AnimalType,
     protocol::{notifications::WhoseTurn, GameStartNotification, Protocol, TurnChangeNotification},
     Channels,
 };
@@ -26,7 +30,7 @@ pub struct TurnTracker {
 
 impl TurnTracker {
     pub fn new(
-        mut server: Server<Protocol, Channels>,
+        server: &mut Server<Protocol, Channels>,
 
         user_key_assoc: &UsernameKeyAssociation,
         key_id_assoc: &KeyIdAssociation,
@@ -105,4 +109,8 @@ impl TurnTracker {
             }
         }
     }
+}
+
+pub struct KeyToUnlockedGenomesMap {
+    pub key_to_genomes: HashMap<UserKey, Vec<AnimalType>>,
 }

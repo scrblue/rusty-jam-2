@@ -1,7 +1,7 @@
 use bevy::prelude::Component;
 use naia_shared::{derive_serde, serde, EntityProperty, Property, Replicate};
 
-use crate::behavior::AxialCoordinates;
+use crate::{behavior::AxialCoordinates, components::genome::Hybrid};
 
 #[derive(Component, Replicate)]
 #[protocol_path = "crate::protocol::Protocol"]
@@ -13,5 +13,6 @@ pub struct PlayerInput {
 #[derive_serde]
 pub enum PlayerInputVariant {
     MoveEntity(AxialCoordinates),
+    BuildHybrid(AxialCoordinates, Hybrid),
     EndTurn,
 }
