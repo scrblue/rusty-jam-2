@@ -54,8 +54,6 @@ pub fn init(
 }
 
 pub fn tick(
-    mut commands: Commands,
-
     mut server: Server<Protocol, Channels>,
 
     query_tilemap: Query<&TileMap>,
@@ -74,74 +72,6 @@ pub fn tick(
     key_map_assoc: Res<KeyMapAssociation>,
     mut key_units_assoc: ResMut<KeyUnitsAssociation>,
 ) {
-    // TODO: Make this not the worst code I've ever written
-    let mut current_turn = WhoseTurn::Player {
-        turn_number: turn_tracker.turn_number,
-        id: *key_id_assoc.get_from_key(&turn_tracker.player).unwrap(),
-        username: user_key_assoc
-            .get_from_key(&turn_tracker.player)
-            .unwrap()
-            .clone(),
-    };
-
-    let mut tiles_to_change = Vec::new();
-    for tile in query_tile.iter() {
-        let MapSync {
-            ref position,
-            ref structure,
-            ..
-        } = &*tile;
-
-        if let TileStructure::GenomeFacility { ref building, .. } = **structure {
-            if let Some(ConstructionStatus {
-                building,
-                finished_on,
-            }) = building
-            {
-                if finished_on == &mut current_turn {
-                    let id = server
-                        .spawn()
-                        .enter_room(&main_room.key)
-                        .insert(UnitSync::new_complete(
-                            **position,
-                            0,
-                            *key_id_assoc.get_from_key(&turn_tracker.player).unwrap(),
-                            building.clone(),
-                            building.body().health,
-                            building.limbs().terrain_a.tiles_per_turn.into(),
-                        ))
-                        .id();
-
-                    key_units_assoc.insert(turn_tracker.player, id);
-
-                    tiles_to_change.push(**position);
-                }
-            }
-        }
-    }
-    {
-        let auth_map = &query_tilemap.get(main_room.map_entity).unwrap().children;
-        for tile_to_change in tiles_to_change {
-            let mut tile = query_tile
-                .get_mut(
-                    auth_map[tile_qrz_to_index(
-                        &map_config,
-                        tile_to_change.column_q,
-                        tile_to_change.row_r,
-                        0,
-                    )],
-                )
-                .unwrap();
-
-            if let TileStructure::GenomeFacility {
-                ref mut building, ..
-            } = *tile.structure
-            {
-                *building = None;
-            }
-        }
-    }
-
     if let Some((entity, ref mut path)) = &mut move_info.0 {
         let mut unit_sync = query_units.get_mut(*entity).unwrap();
 

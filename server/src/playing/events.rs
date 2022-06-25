@@ -32,7 +32,7 @@ pub fn receive_input_event(
     mut event_reader: EventReader<MessageEvent<Protocol, Channels>>,
 
     query_tilemap: Query<&TileMap>,
-    mut query_tile: Query<&mut MapSync>,
+    mut query_tile: Query<(Entity, &mut MapSync)>,
     query_unit: Query<&UnitSync>,
 
     mut turn_tracker: ResMut<TurnTracker>,
@@ -42,7 +42,7 @@ pub fn receive_input_event(
     map_conf: Res<MapConfig>,
     user_key_assoc: Res<UsernameKeyAssociation>,
     key_id_assoc: Res<KeyIdAssociation>,
-    key_units_assoc: Res<KeyUnitsAssociation>,
+    mut key_units_assoc: ResMut<KeyUnitsAssociation>,
     key_genomes: Res<KeyToUnlockedGenomesMap>,
     main_room: Res<MainRoom>,
 ) {
@@ -78,12 +78,22 @@ pub fn receive_input_event(
                     }
 
                     PlayerInputVariant::EndTurn => {
-                        turn_tracker.next(&mut server, &user_key_assoc, &key_id_assoc);
+                        turn_tracker.next(
+                            &mut server,
+                            &user_key_assoc,
+                            &key_id_assoc,
+                            &query_tilemap,
+                            &mut query_tile,
+                            *map_conf,
+                            &main_room,
+                            &mut key_units_assoc,
+                            &mut should_update,
+                        );
                     }
 
                     PlayerInputVariant::BuildHybrid(pos, hybrid) => {
                         let tilemap = &query_tilemap.get(main_room.map_entity).unwrap().children;
-                        let mut tile = query_tile
+                        let (_e, mut tile) = query_tile
                             .get_mut(
                                 tilemap[tile_qrz_to_index(&map_conf, pos.column_q, pos.row_r, 0)],
                             )
@@ -166,7 +176,7 @@ fn handle_move_entity(
     axial_coordianates: AxialCoordinates,
 
     query_tilemap: &Query<&TileMap>,
-    query_tile: &Query<&mut MapSync>,
+    query_tile: &Query<(Entity, &mut MapSync)>,
     query_unit: &Query<&UnitSync>,
 
     key_units_assoc: &KeyUnitsAssociation,
@@ -257,7 +267,7 @@ fn handle_move_entity(
         // TODO: Eliminate unwraps
         let map = &query_tilemap.get(map_entity).unwrap().children;
         let tile = map[tile_qrz_to_index(&map_conf, point.column_q.into(), point.row_r.into(), 0)];
-        let tile_state = query_tile.get(tile).unwrap();
+        let (_e, tile_state) = query_tile.get(tile).unwrap();
 
         // TODO: More complex movement rules here -- traversing different terrains
         // differently
