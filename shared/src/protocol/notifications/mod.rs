@@ -20,3 +20,12 @@ pub enum WhoseTurn {
         turn_number: u16,
     },
 }
+
+impl WhoseTurn {
+    pub fn turn_number(&self) -> u16 {
+        match self {
+            WhoseTurn::Yours { turn_number } => *turn_number,
+            WhoseTurn::Player { turn_number, .. } => *turn_number,
+        }
+    }
+}

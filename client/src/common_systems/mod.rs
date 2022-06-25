@@ -22,7 +22,7 @@ fn insert_unit(
 
     sprites: &UnitSprites,
 ) {
-    let head = match hybrid.head_type() {
+    let head = match hybrid.head_name() {
         "Vampire-Bat" => sprites.fg_bat.clone(),
         "Chicken" => sprites.fg_chicken.clone(),
         "Deer" => sprites.fg_deer.clone(),
@@ -34,7 +34,7 @@ fn insert_unit(
         "Whale" => sprites.fg_whale.clone(),
         _ => unreachable!(),
     };
-    let body = match hybrid.body_type() {
+    let body = match hybrid.body_name() {
         "Vampire-Bat" => sprites.fg_bat.clone(),
         "Chicken" => sprites.fg_chicken.clone(),
         "Deer" => sprites.fg_deer.clone(),
@@ -46,7 +46,7 @@ fn insert_unit(
         "Whale" => sprites.fg_whale.clone(),
         _ => unreachable!(),
     };
-    let limbs = match hybrid.limbs_type() {
+    let limbs = match hybrid.limbs_name() {
         "Vampire-Bat" => sprites.fg_bat.clone(),
         "Chicken" => sprites.fg_chicken.clone(),
         "Deer" => sprites.fg_deer.clone(),

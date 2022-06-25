@@ -1,12 +1,12 @@
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContext};
-use naia_bevy_client::{events::UpdateComponentEvent, Client};
+use naia_bevy_client::{events::UpdateComponentEvent, shared::BigMapKey, Client};
 
 use rgj_shared::{
     behavior::AxialCoordinates,
     components::genome::{AnimalType, Hybrid, TerrainType, DEER},
     protocol::{
-        game_sync::map_sync::{MapSync, TileStructure, TileType},
+        game_sync::map_sync::{ConstructionStatus, MapSync, TileStructure, TileType},
         player_input::PlayerInputVariant,
         PlayerInput, Protocol, ProtocolKind, UnitSync,
     },
@@ -257,11 +257,27 @@ pub fn display_info(
                 let mut on_facility = false;
                 match &*structure {
                     TileStructure::None => {}
-                    TileStructure::GenomeFacility { unique_genome } => {
+                    TileStructure::GenomeFacility {
+                        unique_genome,
+                        building,
+                    } => {
                         on_facility = true;
+
+                        let building = match building {
+                            Some(ConstructionStatus {
+                                building,
+                                finished_on,
+                            }) => format!(
+                                " building a {} until turn {}",
+                                building.name(),
+                                finished_on.turn_number()
+                            ),
+                            None => "".to_owned(),
+                        };
+
                         ui.label(format!(
-                            "Guarding a genome facility containing {} genome",
-                            unique_genome.name
+                            "Guarding a genome facility containing {} genome{}",
+                            unique_genome.name, building
                         ));
                     }
                 }
@@ -376,10 +392,25 @@ pub fn display_info(
 
                 match &*structure {
                     TileStructure::None => {}
-                    TileStructure::GenomeFacility { unique_genome } => {
+                    TileStructure::GenomeFacility {
+                        unique_genome,
+                        building,
+                    } => {
+                        let building = match building {
+                            Some(ConstructionStatus {
+                                building,
+                                finished_on,
+                            }) => format!(
+                                " building a {} until turn {}",
+                                building.name(),
+                                finished_on.turn_number()
+                            ),
+                            None => "".to_owned(),
+                        };
+
                         ui.label(format!(
-                            "With a genome facility containing {} genome",
-                            unique_genome.name
+                            "With a genome facility containing {} genome{}",
+                            unique_genome.name, building
                         ));
                     }
                 }
