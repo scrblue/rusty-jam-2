@@ -74,7 +74,7 @@ pub fn tick(
 ) {
     if let Some((entity, ref mut path)) = &mut move_info.0 {
         let mut unit_sync = query_units.get_mut(*entity).unwrap();
-
+        let len = path.len();
         let run_updates = match path.pop_front() {
             Some(next_stop) => {
                 // If the current position is a genome facility and you're moving off it, then you
@@ -90,6 +90,8 @@ pub fn tick(
                         )],
                     )
                     .unwrap();
+
+                *unit_sync.stamina_remaining -= len as u16 - 1;
 
                 if let TileStructure::GenomeFacility { unique_genome, .. } =
                     &*auth_tile_old.structure
