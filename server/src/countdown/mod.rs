@@ -60,7 +60,6 @@ pub fn init(
     }
 
     for (index, key) in server.user_keys().into_iter().enumerate() {
-        // FIXME: Support more than four players
         let mut sub_map_entities = Vec::with_capacity(
             map_config.size_width as usize * map_config.size_height as usize * 2,
         );
